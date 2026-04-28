@@ -1,20 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --purple-dark:   #2d1b69;
-  --purple-mid:    #4a2c9e;
-  --purple-light:  #7c5cbf;
-  --purple-glow:   #9b7fd4;
+  --purple-dark:   #5a1068;
+  --purple-mid:    #7B2D8B;
+  --purple-light:  #9b4aab;
+  --purple-glow:   #b87ac5;
   --cream:         #fdf6ec;
   --cream-dark:    #f0e6d3;
   --cream-muted:   #c9b99a;
   --white:         #ffffff;
   --error:         #e05555;
   --success:       #3dba7e;
-  --text-dark:     #1a0f3d;
-  --text-muted:    #6b5b95;
-  --shadow:        0 8px 32px rgba(45, 27, 105, 0.18);
-  --shadow-sm:     0 2px 12px rgba(45, 27, 105, 0.12);
+  --text-dark:     #2a0a30;
+  --text-muted:    #7B2D8B;
+  --shadow:        0 8px 32px rgba(123, 45, 139, 0.18);
+  --shadow-sm:     0 2px 12px rgba(123, 45, 139, 0.12);
   --radius:        14px;
   --radius-sm:     8px;
   --transition:    all 0.2s ease;
@@ -28,7 +28,7 @@
 
 body {
   font-family: 'Inter', sans-serif;
-  background: linear-gradient(135deg, var(--purple-dark) 0%, var(--purple-mid) 50%, var(--purple-light) 100%);
+  background: linear-gradient(135deg, #5a1068 0%, #7B2D8B 50%, #9b4aab 100%);
   min-height: 100vh;
   color: var(--text-dark);
 }

@@ -54,24 +54,24 @@ export default function Home() {
           <div style={{
             background: "#fdf6ec", borderRadius: 20, padding: "2.5rem 2rem",
             textAlign: "center", maxWidth: 360, width: "100%",
-            boxShadow: "0 20px 60px rgba(45,27,105,0.3)"
+            boxShadow: "0 20px 60px rgba(123,45,139,0.3)"
           }}>
             <div style={{ fontSize: "3.5rem", marginBottom: "1rem" }}>✅</div>
-            <h2 style={{ fontWeight: 700, color: "#1a0f3d", fontSize: "1.3rem", marginBottom: "0.5rem" }}>
+            <h2 style={{ fontWeight: 700, color: "#2a0a30", fontSize: "1.3rem", marginBottom: "0.5rem" }}>
               Data Saved!
             </h2>
-            <p style={{ color: "#6b5b95", fontSize: "0.9rem", marginBottom: "1.75rem" }}>
+            <p style={{ color: "#7B2D8B", fontSize: "0.9rem", marginBottom: "1.75rem" }}>
               Welcome, <strong>{form.username}</strong>! Your details have been saved successfully.
             </p>
             <button
               onClick={() => navigate("/portal")}
               style={{
                 width: "100%", padding: "0.9rem",
-                background: "linear-gradient(135deg, #4a2c9e, #2d1b69)",
+                background: "linear-gradient(135deg, #7B2D8B, #5a1068)",
                 border: "none", borderRadius: 10,
                 color: "#fdf6ec", fontSize: "1rem", fontWeight: 700,
                 cursor: "pointer", fontFamily: "Inter, sans-serif",
-                boxShadow: "0 4px 14px rgba(74,44,158,0.4)"
+                boxShadow: "0 4px 14px rgba(123,45,139,0.4)"
               }}>
               Continue to Navigator →
             </button>
@@ -86,15 +86,15 @@ export default function Home() {
         <div style={{ textAlign: "center", marginBottom: "2rem" }}>
           <div style={{
             width: 68, height: 68, borderRadius: "50%",
-            background: "linear-gradient(135deg, #4a2c9e, #2d1b69)",
+            background: "linear-gradient(135deg, #7B2D8B, #5a1068)",
             display: "flex", alignItems: "center", justifyContent: "center",
             margin: "0 auto 1rem", fontSize: "2rem",
-            boxShadow: "0 8px 24px rgba(74,44,158,0.35)"
+            boxShadow: "0 8px 24px rgba(123,45,139,0.35)"
           }}>🧭</div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#1a0f3d", marginBottom: "0.3rem" }}>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#2a0a30", marginBottom: "0.3rem" }}>
             Campus Navigator
           </h1>
-          <p style={{ color: "#6b5b95", fontSize: "0.85rem" }}>
+          <p style={{ color: "#7B2D8B", fontSize: "0.85rem" }}>
             AI-powered AR campus navigation
           </p>
         </div>
@@ -119,7 +119,7 @@ export default function Home() {
           {/* Student toggle */}
           <div style={{
             background: "#f5f0fa", borderRadius: 12, padding: "0.9rem 1rem",
-            border: "1.5px solid #e8dff5",
+            border: "1.5px solid #e8d5f0",
             display: "flex", alignItems: "center", justifyContent: "space-between"
           }}>
             <span style={{ fontSize: "0.9rem", fontWeight: 600, color: "#1a0f3d" }}>
@@ -134,8 +134,8 @@ export default function Home() {
                     style={{
                       padding: "0.35rem 1.1rem", borderRadius: 20, border: "none",
                       fontWeight: 600, fontSize: "0.82rem", cursor: "pointer",
-                      background: active ? "linear-gradient(135deg, #4a2c9e, #2d1b69)" : "#e8dff5",
-                      color: active ? "#fdf6ec" : "#6b5b95",
+                      background: active ? "linear-gradient(135deg, #7B2D8B, #5a1068)" : "#e8d5f0",
+                      color: active ? "#fdf6ec" : "#7B2D8B",
                       fontFamily: "Inter, sans-serif", transition: "all 0.2s"
                     }}>{opt}</button>
                 );
