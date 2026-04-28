@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../services/api";
 
 const FACULTIES = [
@@ -20,6 +20,8 @@ const FACULTIES = [
 
 export default function Home() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const location = searchParams.get("location") || "";
   const [form, setForm]       = useState({ username: "", email: "", is_student: false, faculty: "" });
   const [error, setError]     = useState("");
   const [loading, setLoading] = useState(false);
@@ -64,7 +66,7 @@ export default function Home() {
               Welcome, <strong>{form.username}</strong>! Your details have been saved successfully.
             </p>
             <button
-              onClick={() => navigate("/portal")}
+              onClick={() => navigate(location ? `/portal?location=${location}` : "/portal")}
               style={{
                 width: "100%", padding: "0.9rem",
                 background: "linear-gradient(135deg, #7B2D8B, #5a1068)",
