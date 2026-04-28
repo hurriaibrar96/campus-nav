@@ -19,6 +19,10 @@ app.include_router(navigation.router, prefix="/navigation")
 app.include_router(user.router, prefix="/user")
 app.include_router(admin.router, prefix="/admin")
 
+@app.get("/")
+async def root():
+    return {"status": "ok"}
+
 @app.on_event("startup")
 async def startup():
     await connect_db()
