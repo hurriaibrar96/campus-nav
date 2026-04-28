@@ -1,0 +1,40 @@
+{
+  "intents": {
+    "greeting": ["hi", "hello", "hey", "good morning", "good afternoon", "start", "assalam"],
+    "help":     ["help", "what can you do", "how does this work", "guide me"],
+    "where":    ["where is", "how do i get to", "take me to", "navigate to", "i want to go to", "find", "go to", "i need to go to", "show me"]
+  },
+  "locations": {
+    "entrance":           ["entrance", "main entrance", "medan", "towards medan", "entry", "door", "main door"],
+    "sitting_area":       ["sitting area", "sitting", "seating", "seating area"],
+    "g4_room":            ["g4", "g4 room", "room g4"],
+    "g3_area":            ["g3", "g3 area", "room g3"],
+    "stage":              ["stage", "main stage", "central stage", "center"],
+    "library_gate1":      ["library gate 1", "library gate one", "lib gate 1", "library 1"],
+    "library_gate2":      ["library gate 2", "library gate two", "lib gate 2", "library 2", "library"],
+    "open_air":           ["open air", "outside", "open area", "towards open air"],
+    "computer_lab1":      ["computer lab", "computer lab 1", "lab 1", "comp lab", "it lab"],
+    "student_counter":    ["student counter", "counter", "reception", "help desk"],
+    "avionics_lab":       ["avionics", "avionics lab"],
+    "aircraft_showroom":  ["aircraft", "aircraft showroom", "showroom", "plane"],
+    "stairs_first_floor": ["stairs to first floor", "first floor stairs", "upstairs", "first floor", "stairs up"],
+    "aerolab":            ["aerolab", "aero lab"],
+    "back_stairs":        ["back stairs", "back staircase", "rear stairs"],
+    "carbs_dept":         ["carbs", "carbs department", "carbs dept"],
+    "boys_washroom":      ["boys washroom", "boys bathroom", "male washroom", "gents", "boys toilet"],
+    "emergency_exit":     ["emergency exit", "emergency", "fire exit", "exit"],
+    "ahs_faculty":        ["ahs", "ahs faculty", "faculty", "ahs block"],
+    "girls_washroom":     ["girls washroom", "girls bathroom", "female washroom", "ladies", "girls toilet"],
+    "stairs_1":           ["stairs 1", "staircase 1", "left stairs", "stairs one"],
+    "stairs_2":           ["stairs 2", "staircase 2", "right stairs", "stairs two", "g4 stairs"]
+  },
+  "responses": {
+    "greeting":      "Hi! I'm your campus navigation assistant. Where are you right now?",
+    "ask_dest":      "Got it! Where would you like to go?",
+    "help":          "I can guide you anywhere on this floor. Just tell me where you are and where you want to go! Try: 'Take me to the Library' or 'Where is the Computer Lab?'",
+    "not_found":     "Sorry, I didn't recognize that location. Try saying a room name like 'Stage', 'Library Gate 1', or 'Computer Lab'.",
+    "no_path":       "Sorry, I couldn't find a route between those locations.",
+    "same_location": "You're already there!",
+    "fallback":      "I'm not sure I understood. Try saying something like: 'Take me to the Student Counter' or 'Where is the Avionics Lab?'"
+  }
+}

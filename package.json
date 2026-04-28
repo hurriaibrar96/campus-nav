@@ -1,0 +1,7 @@
+{
+  "name": "campus-ar-navigation-system",
+  "version": "1.0.0",
+  "scripts": {
+    "dev:frontend": "cd frontend && npm run dev"
+  }
+}

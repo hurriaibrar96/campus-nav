@@ -1,0 +1,112 @@
+{
+  "entrance": {
+    "label": "Entrance (Towards Medan)",
+    "x": 5, "y": 0,
+    "neighbors": { "sitting_area": 1, "carbs_dept": 1 }
+  },
+  "sitting_area": {
+    "label": "Sitting Area",
+    "x": 5, "y": 1,
+    "neighbors": { "entrance": 1, "g3_area": 1 }
+  },
+  "g3_area": {
+    "label": "G3 Area",
+    "x": 5, "y": 2,
+    "neighbors": { "sitting_area": 1, "stage": 1 }
+  },
+  "stage": {
+    "label": "Stage",
+    "x": 5, "y": 3.5,
+    "neighbors": { "g3_area": 1, "boys_washroom": 1, "library_gate2": 1, "student_counter": 1, "stairs_1": 1, "stairs_2": 1, "girls_washroom": 1 }
+  },
+  "boys_washroom": {
+    "label": "Boys Washroom",
+    "x": 4, "y": 4,
+    "neighbors": { "stage": 1, "carbs_dept": 1 }
+  },
+  "carbs_dept": {
+    "label": "Carbs Department",
+    "x": 4, "y": 0,
+    "neighbors": { "entrance": 1, "boys_washroom": 1, "emergency_exit": 1 }
+  },
+  "emergency_exit": {
+    "label": "Emergency Exit",
+    "x": 3, "y": 2,
+    "neighbors": { "carbs_dept": 1, "towards_open_air": 1 }
+  },
+  "girls_washroom": {
+    "label": "Girls Washroom",
+    "x": 6, "y": 4.5,
+    "neighbors": { "stage": 1 }
+  },
+  "library_gate2": {
+    "label": "Library Gate 2",
+    "x": 6, "y": 3.5,
+    "neighbors": { "stage": 1, "student_counter": 1 }
+  },
+  "student_counter": {
+    "label": "Student Counter",
+    "x": 6, "y": 2.5,
+    "neighbors": { "library_gate2": 1, "computer_lab1": 1, "g4_room": 1 }
+  },
+  "computer_lab1": {
+    "label": "Computer Lab 1",
+    "x": 6, "y": 1.5,
+    "neighbors": { "student_counter": 1, "library_gate1": 1 }
+  },
+  "library_gate1": {
+    "label": "Library Gate 1",
+    "x": 6, "y": 0.5,
+    "neighbors": { "computer_lab1": 1, "towards_open_air": 1 }
+  },
+  "towards_open_air": {
+    "label": "Towards Open Air",
+    "x": 6, "y": -0.5,
+    "neighbors": { "library_gate1": 1, "emergency_exit": 1 }
+  },
+  "g4_room": {
+    "label": "G4 Room",
+    "x": 7, "y": 2.5,
+    "neighbors": { "student_counter": 1, "aerolab": 1, "stairs_first_floor": 1 }
+  },
+  "aerolab": {
+    "label": "Aerolab",
+    "x": 8, "y": 2.5,
+    "neighbors": { "g4_room": 1, "aircraft_showroom": 1 }
+  },
+  "aircraft_showroom": {
+    "label": "Aircraft Showroom",
+    "x": 9, "y": 2.5,
+    "neighbors": { "aerolab": 1, "avionics_lab": 1 }
+  },
+  "avionics_lab": {
+    "label": "Avionics Lab",
+    "x": 10, "y": 2.5,
+    "neighbors": { "aircraft_showroom": 1 }
+  },
+  "stairs_first_floor": {
+    "label": "Stairs to First Floor",
+    "x": 7, "y": 3.5,
+    "neighbors": { "g4_room": 1, "stairs_1": 1 }
+  },
+  "stairs_1": {
+    "label": "Stairs 1",
+    "x": 5.5, "y": 4.5,
+    "neighbors": { "stage": 1, "stairs_first_floor": 1, "back_stairs": 1 }
+  },
+  "stairs_2": {
+    "label": "Stairs 2",
+    "x": 4.5, "y": 3,
+    "neighbors": { "stage": 1 }
+  },
+  "back_stairs": {
+    "label": "Back Stairs",
+    "x": 6, "y": 5.5,
+    "neighbors": { "stairs_1": 1 }
+  },
+  "ahs_faculty": {
+    "label": "AHS Faculty",
+    "x": 3, "y": 5,
+    "neighbors": { "boys_washroom": 1, "back_stairs": 1 }
+  }
+}

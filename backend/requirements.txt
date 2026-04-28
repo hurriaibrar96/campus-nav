@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+motor==3.3.2
+pymongo[srv]==4.6.3
+certifi
+pydantic-settings
+pydantic[email]
+python-jose[cryptography]
+bcrypt==4.0.1
+python-dotenv
