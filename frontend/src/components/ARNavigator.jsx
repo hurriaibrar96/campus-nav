@@ -152,9 +152,9 @@ export default function ARNavigator({ path, locations, onExit }) {
       {/* Bottom navigation card */}
       <div style={{
         position: "absolute", bottom: 20, left: 16, right: 16,
-        background: "rgba(15,8,40,0.92)", backdropFilter: "blur(20px)",
+        background: "rgba(10,10,10,0.92)", backdropFilter: "blur(20px)",
         borderRadius: 24, padding: "20px",
-        border: "1px solid rgba(124,92,191,0.25)",
+        border: "1px solid rgba(245,197,24,0.25)",
         color: "white", fontFamily: "Inter, sans-serif",
         boxShadow: "0 -4px 32px rgba(0,0,0,0.5)", zIndex: 10,
       }}>
