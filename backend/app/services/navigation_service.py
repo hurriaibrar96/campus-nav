@@ -1,6 +1,7 @@
 import json, os, heapq
 
-_map_path = os.path.join(os.path.dirname(__file__), "../../..", "data", "campus_map.json")
+# Data folder is now in backend/data/
+_map_path = os.path.join(os.path.dirname(__file__), "../..", "data", "campus_map.json")
 
 with open(_map_path) as f:
     GRAPH = json.load(f)
