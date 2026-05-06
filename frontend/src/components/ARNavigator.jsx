@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import CameraHandler from "./CameraHandler";
 
 function getDirection(from, to) {
@@ -14,6 +14,8 @@ const LABEL = { up: "⬆ Go Forward", down: "⬇ Go Back", left: "⬅ Turn Left"
 export default function ARNavigator({ path, locations, onExit }) {
   const [step, setStep]       = useState(0);
   const [arrived, setArrived] = useState(false);
+  const [deviceHeading, setDeviceHeading] = useState(0); // User's facing direction
+  const [orientationPermission, setOrientationPermission] = useState('granted'); // granted, denied, prompt
   const videoRef = useRef(null);
 
   const getNode = (id) => locations.find((l) => l.id === id);
@@ -48,6 +50,57 @@ export default function ARNavigator({ path, locations, onExit }) {
     setStep((s) => Math.max(0, s - 1));
   };
 
+  // Request orientation permission
+  const requestOrientationPermission = async () => {
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      try {
+        const response = await DeviceOrientationEvent.requestPermission();
+        setOrientationPermission(response);
+        if (response === 'granted') {
+          startOrientationTracking();
+        }
+      } catch (error) {
+        console.error('Orientation permission error:', error);
+        setOrientationPermission('denied');
+      }
+    } else {
+      setOrientationPermission('granted');
+      startOrientationTracking();
+    }
+  };
+
+  // Start tracking device orientation
+  const startOrientationTracking = () => {
+    const handleOrientation = (event) => {
+      if (event.alpha !== null) {
+        let heading = event.alpha;
+        if (event.webkitCompassHeading) {
+          heading = event.webkitCompassHeading; // iOS
+        }
+        setDeviceHeading(heading);
+      }
+    };
+
+    window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+    window.addEventListener('deviceorientation', handleOrientation, true);
+  };
+
+  // Track device orientation
+  useEffect(() => {
+    // Auto-start for non-iOS or check permission
+    if (typeof DeviceOrientationEvent === 'undefined' || typeof DeviceOrientationEvent.requestPermission !== 'function') {
+      setOrientationPermission('granted');
+      startOrientationTracking();
+    } else {
+      setOrientationPermission('prompt');
+    }
+
+    return () => {
+      window.removeEventListener('deviceorientationabsolute', startOrientationTracking, true);
+      window.removeEventListener('deviceorientation', startOrientationTracking, true);
+    };
+  }, []);
+
   if (path.length === 0) return <p style={{ color: "var(--cream)" }}>No route to display.</p>;
 
   return (
@@ -70,7 +123,11 @@ export default function ARNavigator({ path, locations, onExit }) {
           const cy = canvas.height / 2 - 60;
           const dir = current.direction;
 
-          const angle = { up: -Math.PI/2, down: Math.PI/2, left: Math.PI, right: 0 }[dir] ?? 0;
+          // Calculate target angle based on map direction
+          const targetAngle = { up: 0, right: 90, down: 180, left: 270 }[dir] ?? 0;
+          
+          // Calculate relative angle: target direction - device heading
+          const relativeAngle = ((targetAngle - deviceHeading + 360) % 360) * (Math.PI / 180);
 
           // Outer glow ring
           const grad = ctx.createRadialGradient(cx, cy, 40, cx, cy, 90);
@@ -93,7 +150,7 @@ export default function ARNavigator({ path, locations, onExit }) {
           // Draw geometric arrow
           ctx.save();
           ctx.translate(cx, cy);
-          ctx.rotate(angle);
+          ctx.rotate(relativeAngle);
 
           // Arrow shaft
           ctx.beginPath();
@@ -129,6 +186,26 @@ export default function ARNavigator({ path, locations, onExit }) {
         }}
       />
 
+      {/* Permission prompt for iOS */}
+      {orientationPermission === 'prompt' && (
+        <div style={{
+          position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
+          background: "rgba(15,8,40,0.95)", backdropFilter: "blur(20px)",
+          borderRadius: 20, padding: "24px", textAlign: "center",
+          border: "1px solid rgba(124,92,191,0.4)", zIndex: 100, maxWidth: 320
+        }}>
+          <div style={{ fontSize: "3rem", marginBottom: 12 }}>🧭</div>
+          <h3 style={{ color: "#fdf6ec", fontSize: "1.1rem", fontWeight: 700, marginBottom: 8 }}>Enable Compass</h3>
+          <p style={{ color: "rgba(253,246,236,0.7)", fontSize: "0.85rem", marginBottom: 20 }}>Allow access to device orientation for accurate AR navigation</p>
+          <button onClick={requestOrientationPermission} style={{
+            width: "100%", padding: "12px",
+            background: "linear-gradient(135deg, #7c5cbf, #4a2c9e)",
+            border: "none", borderRadius: 12,
+            color: "white", fontSize: "0.95rem", fontWeight: "bold", cursor: "pointer",
+          }}>Allow Compass Access</button>
+        </div>
+      )}
+
       {/* Top bar */}
       <div style={{
         position: "absolute", top: 16, left: 16, right: 16,
@@ -138,9 +215,24 @@ export default function ARNavigator({ path, locations, onExit }) {
         color: "white", fontFamily: "Inter, sans-serif",
         zIndex: 10, display: "flex", justifyContent: "space-between", alignItems: "center"
       }}>
-        <div>
-          <div style={{ fontSize: "0.65rem", color: "#9b7fd4", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700, marginBottom: 2 }}>Navigating to</div>
-          <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "#fdf6ec" }}>{endLabel}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: "50%",
+            background: "rgba(124,92,191,0.2)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            border: "2px solid rgba(124,92,191,0.5)",
+            position: "relative"
+          }}>
+            <div style={{
+              fontSize: "1.2rem",
+              transform: `rotate(${deviceHeading}deg)`,
+              transition: "transform 0.3s ease"
+            }}>🧭</div>
+          </div>
+          <div>
+            <div style={{ fontSize: "0.65rem", color: "#9b7fd4", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700, marginBottom: 2 }}>Navigating to</div>
+            <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "#fdf6ec" }}>{endLabel}</div>
+          </div>
         </div>
         <button onClick={onExit} style={{
           background: "rgba(224,85,85,0.2)", border: "1px solid rgba(224,85,85,0.4)",
