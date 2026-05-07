@@ -5,10 +5,8 @@ function getDirection(from, to) {
   const dx = to.x - from.x;
   const dy = to.y - from.y;
   
-  // Map coordinates to real campus directions:
-  // X-axis: Entrance(0) to Bookshop(11) = Forward/Backward
-  // Y-axis: Positive Y = Left side, Negative Y = Right side
-  
+  // Real campus layout: Main corridor goes forward (X-axis)
+  // Side rooms are left/right (Y-axis)
   if (Math.abs(dx) > Math.abs(dy)) {
     return dx > 0 ? "up" : "down";  // X+ = forward, X- = backward
   }
