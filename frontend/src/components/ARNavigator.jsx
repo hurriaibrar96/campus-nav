@@ -19,9 +19,10 @@ const LABEL = { up: "⬆ Go Forward", down: "⬇ Go Back", left: "⬅ Turn Left"
 export default function ARNavigator({ path, locations, onExit }) {
   const [step, setStep]       = useState(0);
   const [arrived, setArrived] = useState(false);
-  const [deviceHeading, setDeviceHeading] = useState(0); // User's facing direction
-  const [orientationPermission, setOrientationPermission] = useState('granted'); // granted, denied, prompt
+  const [deviceHeading, setDeviceHeading] = useState(0);
+  const [orientationPermission, setOrientationPermission] = useState('prompt');
   const videoRef = useRef(null);
+  const canvasRef = useRef(null);
 
   const getNode = (id) => locations.find((l) => l.id === id);
 
@@ -30,12 +31,6 @@ export default function ARNavigator({ path, locations, onExit }) {
     const from   = getNode(id);
     const to     = getNode(toId);
     const dir    = from && to ? getDirection(from, to) : "right";
-    
-    // Debug logging
-    if (from && to) {
-      console.log(`${from.label} (${from.x},${from.y}) → ${to.label} (${to.x},${to.y}) = ${dir}`);
-    }
-    
     return {
       fromId:    id,
       fromLabel: from?.label ?? id,
@@ -88,7 +83,6 @@ export default function ARNavigator({ path, locations, onExit }) {
         if (event.webkitCompassHeading) {
           heading = event.webkitCompassHeading; // iOS
         }
-        console.log('Device heading:', heading); // Debug
         setDeviceHeading(heading);
       }
     };
@@ -96,6 +90,82 @@ export default function ARNavigator({ path, locations, onExit }) {
     window.addEventListener('deviceorientationabsolute', handleOrientation, true);
     window.addEventListener('deviceorientation', handleOrientation, true);
   };
+
+  // Draw arrow on canvas whenever heading or step changes
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !current || arrived) return;
+
+    const ctx = canvas.getContext("2d");
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2 - 60;
+    const dir = current.direction;
+
+    // Calculate target angle based on map direction
+    const targetAngle = { up: 0, right: 90, down: 180, left: 270 }[dir] ?? 0;
+    
+    // Calculate relative angle: target direction - device heading
+    const relativeAngle = ((targetAngle - deviceHeading + 360) % 360) * (Math.PI / 180);
+
+    // Outer glow ring
+    const grad = ctx.createRadialGradient(cx, cy, 40, cx, cy, 90);
+    grad.addColorStop(0, "rgba(124,92,191,0.35)");
+    grad.addColorStop(1, "rgba(124,92,191,0)");
+    ctx.beginPath();
+    ctx.arc(cx, cy, 90, 0, Math.PI * 2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Circle background
+    ctx.beginPath();
+    ctx.arc(cx, cy, 58, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(26,10,61,0.75)";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(124,92,191,0.9)";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Draw geometric arrow
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(relativeAngle);
+
+    // Arrow shaft
+    ctx.beginPath();
+    ctx.moveTo(-22, 0);
+    ctx.lineTo(14, 0);
+    ctx.strokeStyle = "#fdf6ec";
+    ctx.lineWidth = 7;
+    ctx.lineCap = "round";
+    ctx.stroke();
+
+    // Arrowhead (filled triangle)
+    ctx.beginPath();
+    ctx.moveTo(30, 0);
+    ctx.lineTo(10, -14);
+    ctx.lineTo(10, 14);
+    ctx.closePath();
+    ctx.fillStyle = "#fdf6ec";
+    ctx.fill();
+
+    ctx.restore();
+
+    // Direction label below circle
+    ctx.font = "bold 13px Inter, sans-serif";
+    ctx.fillStyle = "rgba(253,246,236,0.85)";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.shadowColor = "rgba(0,0,0,0.8)";
+    ctx.shadowBlur = 8;
+    ctx.fillText(
+      { up: "GO FORWARD", down: "GO BACK", left: "TURN LEFT", right: "TURN RIGHT" }[dir] ?? "",
+      cx, cy + 68
+    );
+  }, [deviceHeading, current, arrived]);
 
   // Track device orientation
   useEffect(() => {
@@ -123,79 +193,8 @@ export default function ARNavigator({ path, locations, onExit }) {
 
       {/* Canvas arrow overlay */}
       <canvas
+        ref={canvasRef}
         style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none" }}
-        ref={(canvas) => {
-          if (!canvas || !current || arrived) return;
-          const ctx = canvas.getContext("2d");
-          canvas.width  = window.innerWidth;
-          canvas.height = window.innerHeight;
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-          const cx = canvas.width / 2;
-          const cy = canvas.height / 2 - 60;
-          const dir = current.direction;
-
-          // Calculate target angle based on map direction
-          const targetAngle = { up: 0, right: 90, down: 180, left: 270 }[dir] ?? 0;
-          
-          // Calculate relative angle: target direction - device heading
-          const relativeAngle = ((targetAngle - deviceHeading + 360) % 360) * (Math.PI / 180);
-
-          // Outer glow ring
-          const grad = ctx.createRadialGradient(cx, cy, 40, cx, cy, 90);
-          grad.addColorStop(0, "rgba(124,92,191,0.35)");
-          grad.addColorStop(1, "rgba(124,92,191,0)");
-          ctx.beginPath();
-          ctx.arc(cx, cy, 90, 0, Math.PI * 2);
-          ctx.fillStyle = grad;
-          ctx.fill();
-
-          // Circle background
-          ctx.beginPath();
-          ctx.arc(cx, cy, 58, 0, Math.PI * 2);
-          ctx.fillStyle = "rgba(26,10,61,0.75)";
-          ctx.fill();
-          ctx.strokeStyle = "rgba(124,92,191,0.9)";
-          ctx.lineWidth = 3;
-          ctx.stroke();
-
-          // Draw geometric arrow
-          ctx.save();
-          ctx.translate(cx, cy);
-          ctx.rotate(relativeAngle);
-
-          // Arrow shaft
-          ctx.beginPath();
-          ctx.moveTo(-22, 0);
-          ctx.lineTo(14, 0);
-          ctx.strokeStyle = "#fdf6ec";
-          ctx.lineWidth = 7;
-          ctx.lineCap = "round";
-          ctx.stroke();
-
-          // Arrowhead (filled triangle)
-          ctx.beginPath();
-          ctx.moveTo(30, 0);
-          ctx.lineTo(10, -14);
-          ctx.lineTo(10, 14);
-          ctx.closePath();
-          ctx.fillStyle = "#fdf6ec";
-          ctx.fill();
-
-          ctx.restore();
-
-          // Direction label below circle
-          ctx.font = "bold 13px Inter, sans-serif";
-          ctx.fillStyle = "rgba(253,246,236,0.85)";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "top";
-          ctx.shadowColor = "rgba(0,0,0,0.8)";
-          ctx.shadowBlur = 8;
-          ctx.fillText(
-            { up: "GO FORWARD", down: "GO BACK", left: "TURN LEFT", right: "TURN RIGHT" }[dir] ?? "",
-            cx, cy + 68
-          );
-        }}
       />
 
       {/* Permission prompt for iOS */}
