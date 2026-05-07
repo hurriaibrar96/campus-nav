@@ -30,6 +30,12 @@ export default function ARNavigator({ path, locations, onExit }) {
     const from   = getNode(id);
     const to     = getNode(toId);
     const dir    = from && to ? getDirection(from, to) : "right";
+    
+    // Debug logging
+    if (from && to) {
+      console.log(`${from.label} (${from.x},${from.y}) → ${to.label} (${to.x},${to.y}) = ${dir}`);
+    }
+    
     return {
       fromId:    id,
       fromLabel: from?.label ?? id,
@@ -82,6 +88,7 @@ export default function ARNavigator({ path, locations, onExit }) {
         if (event.webkitCompassHeading) {
           heading = event.webkitCompassHeading; // iOS
         }
+        console.log('Device heading:', heading); // Debug
         setDeviceHeading(heading);
       }
     };
