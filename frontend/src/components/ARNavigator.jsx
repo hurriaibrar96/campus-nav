@@ -105,20 +105,34 @@ export default function ARNavigator({ path, locations, onExit }) {
     const cy = canvas.height / 2 - 60;
     const dir = current.direction;
 
-    // Calculate target angle based on map direction
-    const targetAngle = { up: 0, right: 90, down: 180, left: 270 }[dir] ?? 0;
+    // If compass is not working (deviceHeading = 0), just show static arrow
+    const compassActive = deviceHeading !== 0;
     
-    // Calculate relative angle: how far off from target
-    let angleDiff = Math.abs(targetAngle - deviceHeading);
-    if (angleDiff > 180) angleDiff = 360 - angleDiff; // Shortest angle
+    let relativeRad = 0;
+    let isCorrectDirection = false;
     
-    const relativeAngle = ((targetAngle - deviceHeading + 360) % 360);
-    const relativeRad = relativeAngle * (Math.PI / 180);
+    if (compassActive) {
+      // Calculate target angle based on map direction
+      const targetAngle = { up: 0, right: 90, down: 180, left: 270 }[dir] ?? 0;
+      
+      // Calculate relative angle: how far off from target
+      let angleDiff = Math.abs(targetAngle - deviceHeading);
+      if (angleDiff > 180) angleDiff = 360 - angleDiff; // Shortest angle
+      
+      const relativeAngle = ((targetAngle - deviceHeading + 360) % 360);
+      relativeRad = relativeAngle * (Math.PI / 180);
+      
+      // Check if user is facing the correct direction (within 30 degrees)
+      isCorrectDirection = angleDiff < 30;
+    } else {
+      // No compass - show static arrow pointing in direction
+      const staticAngles = { up: -Math.PI/2, right: 0, down: Math.PI/2, left: Math.PI };
+      relativeRad = staticAngles[dir] ?? 0;
+    }
     
-    // Check if user is facing the correct direction (within 30 degrees)
-    const isCorrectDirection = angleDiff < 30;
-    const circleColor = isCorrectDirection ? "rgba(61,186,126,0.35)" : "rgba(245,197,24,0.35)";
-    const borderColor = isCorrectDirection ? "rgba(61,186,126,0.9)" : "rgba(245,197,24,0.9)";
+    const circleColor = compassActive ? (isCorrectDirection ? "rgba(61,186,126,0.35)" : "rgba(245,197,24,0.35)") : "rgba(124,92,191,0.35)";
+    const borderColor = compassActive ? (isCorrectDirection ? "rgba(61,186,126,0.9)" : "rgba(245,197,24,0.9)") : "rgba(124,92,191,0.9)";
+    const bgColor = compassActive ? (isCorrectDirection ? "rgba(26,61,40,0.75)" : "rgba(61,40,26,0.75)") : "rgba(26,10,61,0.75)";
 
     // Outer glow ring
     const grad = ctx.createRadialGradient(cx, cy, 40, cx, cy, 90);
@@ -132,7 +146,7 @@ export default function ARNavigator({ path, locations, onExit }) {
     // Circle background
     ctx.beginPath();
     ctx.arc(cx, cy, 58, 0, Math.PI * 2);
-    ctx.fillStyle = isCorrectDirection ? "rgba(26,61,40,0.75)" : "rgba(61,40,26,0.75)";
+    ctx.fillStyle = bgColor;
     ctx.fill();
     ctx.strokeStyle = borderColor;
     ctx.lineWidth = 3;
@@ -165,14 +179,14 @@ export default function ARNavigator({ path, locations, onExit }) {
 
     // Direction label below circle
     ctx.font = "bold 13px Inter, sans-serif";
-    ctx.fillStyle = isCorrectDirection ? "rgba(61,186,126,0.95)" : "rgba(253,246,236,0.85)";
+    ctx.fillStyle = compassActive && isCorrectDirection ? "rgba(61,186,126,0.95)" : "rgba(253,246,236,0.85)";
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
     ctx.shadowColor = "rgba(0,0,0,0.8)";
     ctx.shadowBlur = 8;
     
     const directionText = { up: "GO FORWARD", down: "GO BACK", left: "TURN LEFT", right: "TURN RIGHT" }[dir] ?? "";
-    const statusText = isCorrectDirection ? "✓ CORRECT DIRECTION" : directionText;
+    const statusText = compassActive ? (isCorrectDirection ? "✓ CORRECT DIRECTION" : directionText) : directionText;
     
     ctx.fillText(statusText, cx, cy + 68);
   }, [deviceHeading, current, arrived]);
@@ -253,6 +267,7 @@ export default function ARNavigator({ path, locations, onExit }) {
           <div>
             <div style={{ fontSize: "0.65rem", color: "#9b7fd4", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700, marginBottom: 2 }}>Navigating to</div>
             <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "#fdf6ec" }}>{endLabel}</div>
+            <div style={{ fontSize: "0.65rem", color: deviceHeading === 0 ? "#ff6b6b" : "#6ee7b7", marginTop: 4 }}>Compass: {deviceHeading === 0 ? "Not Active" : `${Math.round(deviceHeading)}°`}</div>
           </div>
         </div>
         <button onClick={onExit} style={{
