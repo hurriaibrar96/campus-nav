@@ -109,11 +109,17 @@ export default function ARNavigator({ path, locations, onExit }) {
     const targetAngle = { up: 0, right: 90, down: 180, left: 270 }[dir] ?? 0;
     
     // Calculate relative angle: target direction - device heading
-    const relativeAngle = ((targetAngle - deviceHeading + 360) % 360) * (Math.PI / 180);
+    const relativeAngle = ((targetAngle - deviceHeading + 360) % 360);
+    const relativeRad = relativeAngle * (Math.PI / 180);
+    
+    // Check if user is facing the correct direction (within 30 degrees)
+    const isCorrectDirection = relativeAngle < 30 || relativeAngle > 330;
+    const circleColor = isCorrectDirection ? "rgba(61,186,126,0.35)" : "rgba(245,197,24,0.35)";
+    const borderColor = isCorrectDirection ? "rgba(61,186,126,0.9)" : "rgba(245,197,24,0.9)";
 
     // Outer glow ring
     const grad = ctx.createRadialGradient(cx, cy, 40, cx, cy, 90);
-    grad.addColorStop(0, "rgba(124,92,191,0.35)");
+    grad.addColorStop(0, circleColor);
     grad.addColorStop(1, "rgba(124,92,191,0)");
     ctx.beginPath();
     ctx.arc(cx, cy, 90, 0, Math.PI * 2);
@@ -123,16 +129,16 @@ export default function ARNavigator({ path, locations, onExit }) {
     // Circle background
     ctx.beginPath();
     ctx.arc(cx, cy, 58, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(26,10,61,0.75)";
+    ctx.fillStyle = isCorrectDirection ? "rgba(26,61,40,0.75)" : "rgba(61,40,26,0.75)";
     ctx.fill();
-    ctx.strokeStyle = "rgba(124,92,191,0.9)";
+    ctx.strokeStyle = borderColor;
     ctx.lineWidth = 3;
     ctx.stroke();
 
     // Draw geometric arrow
     ctx.save();
     ctx.translate(cx, cy);
-    ctx.rotate(relativeAngle);
+    ctx.rotate(relativeRad);
 
     // Arrow shaft
     ctx.beginPath();
@@ -156,15 +162,16 @@ export default function ARNavigator({ path, locations, onExit }) {
 
     // Direction label below circle
     ctx.font = "bold 13px Inter, sans-serif";
-    ctx.fillStyle = "rgba(253,246,236,0.85)";
+    ctx.fillStyle = isCorrectDirection ? "rgba(61,186,126,0.95)" : "rgba(253,246,236,0.85)";
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
     ctx.shadowColor = "rgba(0,0,0,0.8)";
     ctx.shadowBlur = 8;
-    ctx.fillText(
-      { up: "GO FORWARD", down: "GO BACK", left: "TURN LEFT", right: "TURN RIGHT" }[dir] ?? "",
-      cx, cy + 68
-    );
+    
+    const directionText = { up: "GO FORWARD", down: "GO BACK", left: "TURN LEFT", right: "TURN RIGHT" }[dir] ?? "";
+    const statusText = isCorrectDirection ? "✓ CORRECT DIRECTION" : directionText;
+    
+    ctx.fillText(statusText, cx, cy + 68);
   }, [deviceHeading, current, arrived]);
 
   // Track device orientation
