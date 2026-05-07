@@ -4,8 +4,15 @@ import CameraHandler from "./CameraHandler";
 function getDirection(from, to) {
   const dx = to.x - from.x;
   const dy = to.y - from.y;
-  if (Math.abs(dx) > Math.abs(dy)) return dx > 0 ? "right" : "left";
-  return dy > 0 ? "down" : "up";
+  
+  // Map coordinates to real campus directions:
+  // X-axis (horizontal on map) = Forward/Backward in real campus
+  // Y-axis (vertical on map) = Left/Right in real campus
+  
+  if (Math.abs(dx) > Math.abs(dy)) {
+    return dx > 0 ? "up" : "down";  // X+ = forward, X- = backward
+  }
+  return dy > 0 ? "right" : "left";  // Y+ = right, Y- = left
 }
 
 const ARROW = { up: "⬆️", down: "⬇️", left: "⬅️", right: "➡️" };
