@@ -19,7 +19,7 @@ const LABEL = { up: "⬆ Go Forward", down: "⬇ Go Back", left: "⬅ Turn Left"
 export default function ARNavigator({ path, locations, onExit }) {
   const [step, setStep]       = useState(0);
   const [arrived, setArrived] = useState(false);
-  const [deviceHeading, setDeviceHeading] = useState(0);
+  const [deviceHeading, setDeviceHeading] = useState(null);
   const [orientationPermission, setOrientationPermission] = useState('prompt');
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -105,8 +105,8 @@ export default function ARNavigator({ path, locations, onExit }) {
     const cy = canvas.height / 2 - 60;
     const dir = current.direction;
 
-    // If compass is not working (deviceHeading = 0), just show static arrow
-    const compassActive = deviceHeading !== 0;
+    // If compass is not working (deviceHeading = null), just show static arrow
+    const compassActive = deviceHeading !== null;
     
     let relativeRad = 0;
     let isCorrectDirection = false;
@@ -260,14 +260,14 @@ export default function ARNavigator({ path, locations, onExit }) {
           }}>
             <div style={{
               fontSize: "1.2rem",
-              transform: `rotate(${deviceHeading}deg)`,
+              transform: `rotate(${deviceHeading ?? 0}deg)`,
               transition: "transform 0.3s ease"
             }}>🧭</div>
           </div>
           <div>
             <div style={{ fontSize: "0.65rem", color: "#9b7fd4", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700, marginBottom: 2 }}>Navigating to</div>
             <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "#fdf6ec" }}>{endLabel}</div>
-            <div style={{ fontSize: "0.65rem", color: deviceHeading === 0 ? "#ff6b6b" : "#6ee7b7", marginTop: 4 }}>Compass: {deviceHeading === 0 ? "Not Active" : `${Math.round(deviceHeading)}°`}</div>
+            <div style={{ fontSize: "0.65rem", color: deviceHeading === null ? "#ff6b6b" : "#6ee7b7", marginTop: 4 }}>Compass: {deviceHeading === null ? "Not Active" : `${Math.round(deviceHeading)}°`}</div>
           </div>
         </div>
         <button onClick={onExit} style={{
