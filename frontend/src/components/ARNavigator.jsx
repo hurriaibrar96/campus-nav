@@ -6,13 +6,13 @@ function getDirection(from, to) {
   const dy = to.y - from.y;
   
   // Map coordinates to real campus directions:
-  // X-axis (horizontal on map) = Forward/Backward in real campus
-  // Y-axis (vertical on map) = Left/Right in real campus
+  // X-axis: Entrance(0) to Bookshop(11) = Forward/Backward
+  // Y-axis: Positive Y = Left side, Negative Y = Right side
   
   if (Math.abs(dx) > Math.abs(dy)) {
     return dx > 0 ? "up" : "down";  // X+ = forward, X- = backward
   }
-  return dy > 0 ? "right" : "left";  // Y+ = right, Y- = left
+  return dy > 0 ? "left" : "right";  // Y+ = left, Y- = right
 }
 
 const ARROW = { up: "⬆️", down: "⬇️", left: "⬅️", right: "➡️" };
