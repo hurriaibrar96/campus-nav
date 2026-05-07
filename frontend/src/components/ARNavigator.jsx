@@ -108,12 +108,15 @@ export default function ARNavigator({ path, locations, onExit }) {
     // Calculate target angle based on map direction
     const targetAngle = { up: 0, right: 90, down: 180, left: 270 }[dir] ?? 0;
     
-    // Calculate relative angle: target direction - device heading
+    // Calculate relative angle: how far off from target
+    let angleDiff = Math.abs(targetAngle - deviceHeading);
+    if (angleDiff > 180) angleDiff = 360 - angleDiff; // Shortest angle
+    
     const relativeAngle = ((targetAngle - deviceHeading + 360) % 360);
     const relativeRad = relativeAngle * (Math.PI / 180);
     
     // Check if user is facing the correct direction (within 30 degrees)
-    const isCorrectDirection = relativeAngle < 30 || relativeAngle > 330;
+    const isCorrectDirection = angleDiff < 30;
     const circleColor = isCorrectDirection ? "rgba(61,186,126,0.35)" : "rgba(245,197,24,0.35)";
     const borderColor = isCorrectDirection ? "rgba(61,186,126,0.9)" : "rgba(245,197,24,0.9)";
 
