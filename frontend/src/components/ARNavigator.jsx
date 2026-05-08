@@ -91,105 +91,76 @@ export default function ARNavigator({ path, locations, onExit }) {
     window.addEventListener('deviceorientation', handleOrientation, true);
   };
 
-  // Draw arrow on canvas whenever heading or step changes
+  // Cascading floor arrows animation
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !current || arrived) return;
 
-    const ctx = canvas.getContext("2d");
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2 - 60;
-    const dir = current.direction;
+    const ctx   = canvas.getContext("2d");
+    const W     = canvas.width;
+    const H     = canvas.height;
+    const dir   = current.direction;
+    const TOTAL = 7;
+    let   offset = 0;
+    let   rafId;
 
-    // If compass is not working (deviceHeading = null), just show static arrow
-    const compassActive = deviceHeading !== null;
-    
-    let relativeRad = 0;
-    let isCorrectDirection = false;
-    
-    if (compassActive) {
-      // Calculate target angle based on map direction
-      const targetAngle = { up: 0, right: 90, down: 180, left: 270 }[dir] ?? 0;
-      
-      // Calculate relative angle: how far off from target
-      let angleDiff = Math.abs(targetAngle - deviceHeading);
-      if (angleDiff > 180) angleDiff = 360 - angleDiff; // Shortest angle
-      
-      const relativeAngle = ((targetAngle - deviceHeading + 360) % 360);
-      relativeRad = relativeAngle * (Math.PI / 180);
-      
-      // Check if user is facing the correct direction (within 30 degrees)
-      isCorrectDirection = angleDiff < 30;
-    } else {
-      // No compass - show static arrow pointing in direction
-      const staticAngles = { up: -Math.PI/2, right: 0, down: Math.PI/2, left: Math.PI };
-      relativeRad = staticAngles[dir] ?? 0;
+    function drawChevron(x, y, size, alpha) {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+      ctx.translate(x, y);
+      ctx.beginPath();
+      ctx.moveTo(0,           -size * 0.6);
+      ctx.lineTo( size,        size * 0.4);
+      ctx.lineTo( size * 0.5,  size * 0.05);
+      ctx.lineTo(0,            size * 0.5);
+      ctx.lineTo(-size * 0.5,  size * 0.05);
+      ctx.lineTo(-size,        size * 0.4);
+      ctx.closePath();
+      ctx.fillStyle   = "#00E5FF";
+      ctx.shadowColor = "#00E5FF";
+      ctx.shadowBlur  = 14;
+      ctx.fill();
+      ctx.restore();
     }
-    
-    const circleColor = compassActive ? (isCorrectDirection ? "rgba(61,186,126,0.35)" : "rgba(245,197,24,0.35)") : "rgba(124,92,191,0.35)";
-    const borderColor = compassActive ? (isCorrectDirection ? "rgba(61,186,126,0.9)" : "rgba(245,197,24,0.9)") : "rgba(124,92,191,0.9)";
-    const bgColor = compassActive ? (isCorrectDirection ? "rgba(26,61,40,0.75)" : "rgba(61,40,26,0.75)") : "rgba(26,10,61,0.75)";
 
-    // Outer glow ring
-    const grad = ctx.createRadialGradient(cx, cy, 40, cx, cy, 90);
-    grad.addColorStop(0, circleColor);
-    grad.addColorStop(1, "rgba(124,92,191,0)");
-    ctx.beginPath();
-    ctx.arc(cx, cy, 90, 0, Math.PI * 2);
-    ctx.fillStyle = grad;
-    ctx.fill();
+    function getProps(t) {
+      const perspective = 1 - t * 0.65;
+      const size  = 40 * perspective;
+      const alpha = t < 0.12 ? t / 0.12 : t > 0.82 ? (1 - t) / 0.18 : 1;
+      let x, y;
+      if (dir === "up") {
+        x = W / 2;
+        y = H * 0.85 - t * H * 0.65;
+      } else if (dir === "right") {
+        x = t < 0.4 ? W / 2 : W / 2 + Math.pow((t - 0.4) / 0.6, 2) * W * 0.4;
+        y = H * 0.85 - t * H * 0.5;
+      } else if (dir === "left") {
+        x = t < 0.4 ? W / 2 : W / 2 - Math.pow((t - 0.4) / 0.6, 2) * W * 0.4;
+        y = H * 0.85 - t * H * 0.5;
+      } else {
+        x = W / 2;
+        y = H * 0.15 + t * H * 0.65;
+      }
+      return { x, y, size, alpha };
+    }
 
-    // Circle background
-    ctx.beginPath();
-    ctx.arc(cx, cy, 58, 0, Math.PI * 2);
-    ctx.fillStyle = bgColor;
-    ctx.fill();
-    ctx.strokeStyle = borderColor;
-    ctx.lineWidth = 3;
-    ctx.stroke();
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      for (let i = 0; i < TOTAL; i++) {
+        const t = ((i / TOTAL) + offset) % 1;
+        const { x, y, size, alpha } = getProps(t);
+        drawChevron(x, y, size, alpha);
+      }
+      offset = (offset + 0.008) % 1;
+      rafId  = requestAnimationFrame(draw);
+    }
 
-    // Draw geometric arrow
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(relativeRad);
-
-    // Arrow shaft
-    ctx.beginPath();
-    ctx.moveTo(-22, 0);
-    ctx.lineTo(14, 0);
-    ctx.strokeStyle = "#fdf6ec";
-    ctx.lineWidth = 7;
-    ctx.lineCap = "round";
-    ctx.stroke();
-
-    // Arrowhead (filled triangle)
-    ctx.beginPath();
-    ctx.moveTo(30, 0);
-    ctx.lineTo(10, -14);
-    ctx.lineTo(10, 14);
-    ctx.closePath();
-    ctx.fillStyle = "#fdf6ec";
-    ctx.fill();
-
-    ctx.restore();
-
-    // Direction label below circle
-    ctx.font = "bold 13px Inter, sans-serif";
-    ctx.fillStyle = compassActive && isCorrectDirection ? "rgba(61,186,126,0.95)" : "rgba(253,246,236,0.85)";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-    ctx.shadowColor = "rgba(0,0,0,0.8)";
-    ctx.shadowBlur = 8;
-    
-    const directionText = { up: "GO FORWARD", down: "GO BACK", left: "TURN LEFT", right: "TURN RIGHT" }[dir] ?? "";
-    const statusText = compassActive ? (isCorrectDirection ? "✓ CORRECT DIRECTION" : directionText) : directionText;
-    
-    ctx.fillText(statusText, cx, cy + 68);
-  }, [deviceHeading, current, arrived]);
+    draw();
+    return () => cancelAnimationFrame(rafId);
+  }, [current, arrived]);
 
   // Track device orientation
   useEffect(() => {
