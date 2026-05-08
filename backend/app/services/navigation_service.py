@@ -10,6 +10,8 @@ def get_all_locations() -> list:
     return [{"id": k, "label": v["label"], "x": v["x"], "y": v["y"], "neighbors": v["neighbors"]} for k, v in GRAPH.items()]
 
 def get_path(start: str, end: str) -> list:
+    start = start.lower().strip()
+    end   = end.lower().strip()
     if start not in GRAPH or end not in GRAPH:
         return []
     heap, visited = [(0, start, [start])], set()
@@ -20,7 +22,9 @@ def get_path(start: str, end: str) -> list:
         visited.add(node)
         if node == end:
             return path
-        for neighbor, weight in GRAPH[node]["neighbors"].items():
+        for neighbor, val in GRAPH[node]["neighbors"].items():
             if neighbor not in visited:
+                # Support both old format (number) and new format ({distance, direction})
+                weight = val["distance"] if isinstance(val, dict) else val
                 heapq.heappush(heap, (cost + weight, neighbor, path + [neighbor]))
     return []

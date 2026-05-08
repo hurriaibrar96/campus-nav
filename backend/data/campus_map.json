@@ -54,8 +54,7 @@
     "label": "Stairs 2 (to 1st Floor)",
     "x": 13, "y": 5.5,
     "neighbors": {
-      "g2": { "distance": 1, "direction": "BACK" },
-      "aerolab": { "distance": 1, "direction": "CROSS RIGHT" }
+      "g2": { "distance": 1, "direction": "BACK" }
     }
   },
   "back_stairs": {
@@ -161,7 +160,7 @@
     "neighbors": {
       "sitting_area2": { "distance": 1, "direction": "BACK" },
       "aerolab": { "distance": 1, "direction": "RIGHT FRONT" },
-      "girls_washroom": { "distance": 1, "direction": "VERY LEFT" },
+      "girls_washroom": { "distance": 1, "direction": "LEFT" },
       "ahs_faculty": { "distance": 1, "direction": "LEFT STRAIGHT" }
     }
   },
@@ -172,8 +171,7 @@
       "g4": { "distance": 1, "direction": "BACK" },
       "stairs_3": { "distance": 1, "direction": "RIGHT" },
       "ahs_faculty": { "distance": 1, "direction": "LEFT" },
-      "aircraft_showroom": { "distance": 1, "direction": "SLIGHT RIGHT" },
-      "stairs_2": { "distance": 1, "direction": "CROSS" }
+      "aircraft_showroom": { "distance": 1, "direction": "SLIGHT RIGHT" }
     }
   },
   "stairs_3": {
@@ -240,6 +238,7 @@
     "x": 11, "y": 16,
     "neighbors": {
       "ahs_faculty": { "distance": 1, "direction": "RIGHT" },
+      "aerolab": { "distance": 1, "direction": "CROSS" },
       "aerolab2": { "distance": 1, "direction": "CROSS" },
       "g4": { "distance": 1, "direction": "STRAIGHT BACK" }
     }
