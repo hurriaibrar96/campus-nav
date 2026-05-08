@@ -8,19 +8,11 @@ os.makedirs(OUT_DIR, exist_ok=True)
 
 # QR codes for physical locations around campus
 QR_LOCATIONS = {
-    "entrance":          "Entrance (Towards Medan)",
-    "carbs_dept":        "Carbs Department",
-    "boys_washroom":     "Boys Washroom",
-    "emergency_exit":    "Emergency Exit",
-    "sitting_area1":     "Sitting Area 1",
-    "stairs_2":          "Stairs 2 (First Floor)",
-    "computer_lab":      "Computer Lab",
-    "library":           "Library",
-    "sitting_area2":     "Sitting Area 2",
-    "aerolab":           "Aerolab",
-    "girls_washroom":    "Girls Washroom",
-    "ahs_faculty":       "AHS Faculty",
-    "aerolab2":          "Aerolab 2",
+    "entrance":    "Entrance (Towards Medan)",
+    "stairs_2":    "Stairs 2 (First Floor)",
+    "library":     "Library",
+    "aerolab":     "Aerolab",
+    "ahs_faculty": "AHS Faculty",
 }
 
 for node_id, label in QR_LOCATIONS.items():
