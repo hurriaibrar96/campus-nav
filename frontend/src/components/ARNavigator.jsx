@@ -181,16 +181,17 @@ export default function ARNavigator({ path, locations, onExit }) {
   if (path.length === 0) return <p style={{ color: "var(--cream)" }}>No route to display.</p>;
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "100vh", overflow: "hidden", background: "#000" }}>
+    <div style={{ position: "relative", width: "100%", height: "100vh", overflow: "hidden", background: "#000", display: "flex", flexDirection: "column" }}>
 
-      {/* Camera */}
-      <CameraHandler onStream={(ref) => { videoRef.current = ref?.current; }} />
-
-      {/* Canvas arrow overlay */}
-      <canvas
-        ref={canvasRef}
-        style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none" }}
-      />
+      {/* Camera - 78% height */}
+      <div style={{ position: "relative", width: "100%", height: "78vh", flexShrink: 0 }}>
+        <CameraHandler onStream={(ref) => { videoRef.current = ref?.current; }} />
+        {/* Canvas overlay on camera */}
+        <canvas
+          ref={canvasRef}
+          style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none" }}
+        />
+      </div>
 
       {/* Permission prompt for iOS */}
       {orientationPermission === 'prompt' && (
@@ -248,19 +249,20 @@ export default function ARNavigator({ path, locations, onExit }) {
         }}>✕ Exit</button>
       </div>
 
-      {/* Bottom navigation card */}
+      {/* Bottom navigation card - compact 22% */}
       <div style={{
-        position: "absolute", bottom: 20, left: 16, right: 16,
-        background: "rgba(10,10,10,0.92)", backdropFilter: "blur(20px)",
-        borderRadius: 24, padding: "20px",
-        border: "1px solid rgba(245,197,24,0.25)",
+        width: "100%", height: "22vh",
+        background: "rgba(10,10,10,0.97)",
+        borderTop: "1px solid rgba(124,92,191,0.3)",
+        padding: "10px 16px",
         color: "white", fontFamily: "Inter, sans-serif",
-        boxShadow: "0 -4px 32px rgba(0,0,0,0.5)", zIndex: 10,
+        zIndex: 10, overflowY: "auto",
+        boxSizing: "border-box",
       }}>
         {!arrived ? (
           <>
             {/* Progress bar */}
-            <div style={{ height: 4, background: "#444", borderRadius: 2, marginBottom: 14, overflow: "hidden" }}>
+            <div style={{ height: 3, background: "#444", borderRadius: 2, marginBottom: 8, overflow: "hidden" }}>
               <div style={{
                 width: `${progress}%`, height: "100%",
                 background: "linear-gradient(90deg, #7c5cbf, #9b59b6)",
@@ -269,35 +271,35 @@ export default function ARNavigator({ path, locations, onExit }) {
             </div>
 
             {/* Instruction */}
-            <div style={{ fontSize: 17, fontWeight: "bold", marginBottom: 6 }}>
+            <div style={{ fontSize: 14, fontWeight: "bold", marginBottom: 4 }}>
               {current?.instruction}
             </div>
 
             {/* From → To */}
-            <div style={{ fontSize: 13, opacity: 0.75, marginBottom: 4 }}>
+            <div style={{ fontSize: 11, opacity: 0.75, marginBottom: 2 }}>
               🚩 {current?.fromLabel} → 📍 {current?.toLabel}
             </div>
 
             {/* Step counter */}
-            <div style={{ fontSize: 12, opacity: 0.5, marginBottom: 16 }}>
+            <div style={{ fontSize: 10, opacity: 0.5, marginBottom: 8 }}>
               Step {step + 1} of {steps.length}
             </div>
 
             {/* Buttons */}
-            <div style={{ display: "flex", gap: 12 }}>
+            <div style={{ display: "flex", gap: 8 }}>
               <button onClick={handlePrev} disabled={step === 0} style={{
-                flex: 1, padding: 12,
+                flex: 1, padding: "7px",
                 background: step === 0 ? "#444" : "#555",
-                border: "none", borderRadius: 12,
-                color: "white", fontSize: 15,
+                border: "none", borderRadius: 10,
+                color: "white", fontSize: 13,
                 cursor: step === 0 ? "not-allowed" : "pointer",
               }}>◀ Back</button>
 
               <button onClick={handleNext} style={{
-                flex: 2, padding: 12,
+                flex: 2, padding: "7px",
                 background: "linear-gradient(135deg, #7c5cbf, #4a2c9e)",
-                border: "none", borderRadius: 12,
-                color: "white", fontSize: 15, fontWeight: "bold",
+                border: "none", borderRadius: 10,
+                color: "white", fontSize: 13, fontWeight: "bold",
                 cursor: "pointer",
               }}>
                 {step === steps.length - 1 ? "✅ Arrive" : "Next ▶"}
@@ -305,15 +307,15 @@ export default function ARNavigator({ path, locations, onExit }) {
             </div>
           </>
         ) : (
-          <div style={{ textAlign: "center", padding: "12px 0" }}>
-            <div style={{ fontSize: 48, marginBottom: 10 }}>🎉</div>
-            <div style={{ fontSize: 20, fontWeight: "bold", marginBottom: 6 }}>You have arrived!</div>
-            <div style={{ fontSize: 13, opacity: 0.75, marginBottom: 16 }}>{endLabel} reached successfully</div>
+          <div style={{ textAlign: "center", padding: "8px 0" }}>
+            <div style={{ fontSize: 36, marginBottom: 6 }}>🎉</div>
+            <div style={{ fontSize: 16, fontWeight: "bold", marginBottom: 4 }}>You have arrived!</div>
+            <div style={{ fontSize: 11, opacity: 0.75, marginBottom: 10 }}>{endLabel} reached successfully</div>
             <button onClick={onExit} style={{
-              padding: "12px 32px",
+              padding: "8px 24px",
               background: "linear-gradient(135deg, #7c5cbf, #4a2c9e)",
-              border: "none", borderRadius: 12,
-              color: "white", fontSize: 15, fontWeight: "bold", cursor: "pointer",
+              border: "none", borderRadius: 10,
+              color: "white", fontSize: 13, fontWeight: "bold", cursor: "pointer",
             }}>Done</button>
           </div>
         )}

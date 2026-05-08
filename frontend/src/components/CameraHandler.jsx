@@ -22,7 +22,7 @@ export default function CameraHandler({ onStream }) {
       autoPlay
       playsInline
       muted
-      style={{ width: "100%", display: "block" }}
+      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
     />
   );
 }
