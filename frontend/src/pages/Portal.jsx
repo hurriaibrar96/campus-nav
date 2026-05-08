@@ -100,11 +100,11 @@ export default function Portal() {
           }}>📍</div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 10, color: C.purple, textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 700, marginBottom: 3 }}>Current Location</div>
-            <div style={{ color: C.textDark, fontWeight: 700, fontSize: 16 }}>
+            <div style={{ color: C.textDark, fontWeight: 700, fontSize: 20 }}>
               {scannedLocation ? getLabel(scannedLocation) : "Scan a QR code to start"}
             </div>
           </div>
-          <div style={{ color: C.purpleBorder, fontSize: 18, fontWeight: 300 }}>›</div>
+          <div style={{ color: C.purple, fontSize: 20, fontWeight: 700 }}>›</div>
         </div>
 
         {/* ── Nav Tabs ── */}
@@ -118,16 +118,17 @@ export default function Portal() {
             return (
               <button key={key} onClick={() => !isDisabled && setMode(key)} style={{
                 background: isActive ? C.purple : C.white,
-                border: isActive ? "none" : `1px solid ${C.purpleBorder}`,
-                borderRadius: 12, padding: "10px 4px",
+                border: isActive ? "none" : `0.5px solid ${C.purpleBorder}`,
+                borderRadius: 12, padding: "8px 4px",
+                height: 80,
                 color: isActive ? C.white : isDisabled ? "#D1D5DB" : C.textMuted,
                 cursor: isDisabled ? "not-allowed" : "pointer",
                 fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 11,
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4,
                 transition: "all 0.18s",
                 boxShadow: isActive ? "0 4px 14px rgba(108,71,217,0.35)" : "0 1px 4px rgba(0,0,0,0.06)",
               }}>
-                <span style={{ fontSize: "1.2rem" }}>{icon}</span>
+                <span style={{ fontSize: "1.05rem" }}>{icon}</span>
                 {label}
               </button>
             );
@@ -173,17 +174,18 @@ export default function Portal() {
                 </div>
               </div>
 
-              <button onClick={handleNavigate} disabled={!destination || loading} style={{
+              <button onClick={handleNavigate} disabled={loading} style={{
                 width: "100%", height: 52,
-                background: destination ? C.purple : "#E5E7EB",
+                background: C.purple,
                 border: "none", borderRadius: 14,
-                color: destination ? C.white : C.textMuted,
+                color: C.white,
                 fontSize: 15, fontWeight: 700,
-                cursor: destination ? "pointer" : "not-allowed",
+                cursor: "pointer",
                 fontFamily: "Inter, sans-serif",
-                boxShadow: destination ? "0 4px 18px rgba(108,71,217,0.4)" : "none",
+                boxShadow: "0 4px 18px rgba(108,71,217,0.4)",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                 transition: "all 0.2s",
+                opacity: loading ? 0.7 : 1,
               }}>
                 <span>🔍</span> {loading ? "Finding route..." : "Get Route"}
               </button>
@@ -194,6 +196,35 @@ export default function Portal() {
                 </div>
               )}
             </div>
+
+            {/* Quick Access */}
+            {path.length === 0 && (
+              <div style={{
+                background: C.white, border: `1px solid ${C.purpleBorder}`,
+                borderRadius: 16, padding: "16px",
+                boxShadow: "0 2px 12px rgba(108,71,217,0.08)",
+              }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Quick Access</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {["Library Gate 1", "Aerolab", "AHS Faculty", "Computer Lab 1", "Stairs 2"].map((place) => (
+                    <button key={place}
+                      onClick={() => {
+                        const loc = locations.find((l) => l.label === place);
+                        if (loc) setDestination(loc.id);
+                      }}
+                      style={{
+                        padding: "7px 14px", borderRadius: 20,
+                        background: C.purpleLight, border: `1px solid ${C.purpleBorder}`,
+                        color: C.purple, fontSize: 13, fontWeight: 600,
+                        cursor: "pointer", fontFamily: "Inter, sans-serif",
+                        transition: "all 0.15s",
+                      }}>
+                      {place}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Route Card */}
             {path.length > 0 && (
