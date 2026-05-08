@@ -156,7 +156,7 @@ export default function Home() {
           {form.is_student && (
             <div className="form-group">
               <label>Select Faculty</label>
-              <select className="select" name="faculty" value={form.faculty} onChange={update} required>
+              <select className="select" name="faculty" value={form.faculty} onChange={(e) => setForm({ ...form, faculty: e.target.value })} required>
                 <option value="">Choose your faculty...</option>
                 {FACULTIES.map((f) => <option key={f} value={f}>{f}</option>)}
               </select>
