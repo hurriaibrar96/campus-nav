@@ -18,6 +18,6 @@ QR_LOCATIONS = {
 for node_id, label in QR_LOCATIONS.items():
     url = f"{BASE_URL}/portal?location={node_id}"
     qrcode.make(url).save(os.path.join(OUT_DIR, f"{node_id}.png"))
-    print(f"✅ {label} → {url}")
+    print(f"OK: {label} -> {url}")
 
 print(f"\nGenerated {len(QR_LOCATIONS)} QR codes in: {OUT_DIR}")
