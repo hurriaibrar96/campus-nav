@@ -2,7 +2,7 @@ import qrcode
 import os
 
 BASE_URL = "https://superior-campus.vercel.app"
-OUT_DIR  = os.path.join(os.path.dirname(__file__), "..", "frontend", "public", "qr")
+OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "public", "qr")
 
 os.makedirs(OUT_DIR, exist_ok=True)
 
