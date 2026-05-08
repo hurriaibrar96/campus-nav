@@ -10,61 +10,41 @@ function getDirection(from, to) {
 
 const LABEL = { up: "⬆ Go Forward", down: "⬇ Go Back", left: "⬅ Turn Left", right: "➡ Turn Right" };
 
-// Draw a single filled chevron pointing UP at (x,y)
 function drawChevron(ctx, x, y, size, alpha) {
   ctx.save();
   ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
   ctx.translate(x, y);
   ctx.beginPath();
-  ctx.moveTo(0,          -size * 0.6);
-  ctx.lineTo( size,       size * 0.4);
-  ctx.lineTo( size * 0.5, size * 0.05);
-  ctx.lineTo(0,           size * 0.5);
-  ctx.lineTo(-size * 0.5, size * 0.05);
-  ctx.lineTo(-size,       size * 0.4);
+  ctx.moveTo(0,           -size * 0.6);
+  ctx.lineTo( size,        size * 0.4);
+  ctx.lineTo( size * 0.5,  size * 0.05);
+  ctx.lineTo(0,            size * 0.5);
+  ctx.lineTo(-size * 0.5,  size * 0.05);
+  ctx.lineTo(-size,        size * 0.4);
   ctx.closePath();
-  ctx.fillStyle  = "#00E5FF";
+  ctx.fillStyle   = "#00E5FF";
   ctx.shadowColor = "#00E5FF";
   ctx.shadowBlur  = 14;
   ctx.fill();
   ctx.restore();
 }
 
-// Compute (x, y, size, alpha) for chevron at progress t (0=bottom, 1=top)
 function getChevronProps(t, dir, W, H) {
   const perspective = 1 - t * 0.65;
   const size  = 40 * perspective;
-  const alpha = t < 0.12 ? t / 0.12
-              : t > 0.82 ? (1 - t) / 0.18
-              : 1;
+  const alpha = t < 0.12 ? t / 0.12 : t > 0.82 ? (1 - t) / 0.18 : 1;
   let x, y;
 
   if (dir === "up") {
     x = W / 2;
     y = H * 0.85 - t * H * 0.65;
-
   } else if (dir === "right") {
-    if (t < 0.4) {
-      x = W / 2;
-      y = H * 0.85 - t * H * 0.5;
-    } else {
-      const p = (t - 0.4) / 0.6;
-      x = W / 2 + p * p * W * 0.4;
-      y = H * 0.85 - t * H * 0.5;
-    }
-
+    x = t < 0.4 ? W / 2 : W / 2 + Math.pow((t - 0.4) / 0.6, 2) * W * 0.4;
+    y = H * 0.85 - t * H * 0.5;
   } else if (dir === "left") {
-    if (t < 0.4) {
-      x = W / 2;
-      y = H * 0.85 - t * H * 0.5;
-    } else {
-      const p = (t - 0.4) / 0.6;
-      x = W / 2 - p * p * W * 0.4;
-      y = H * 0.85 - t * H * 0.5;
-    }
-
+    x = t < 0.4 ? W / 2 : W / 2 - Math.pow((t - 0.4) / 0.6, 2) * W * 0.4;
+    y = H * 0.85 - t * H * 0.5;
   } else {
-    // down
     x = W / 2;
     y = H * 0.15 + t * H * 0.65;
   }
@@ -73,12 +53,14 @@ function getChevronProps(t, dir, W, H) {
 }
 
 export default function ARNavigator({ path, locations, onExit }) {
-  const [step, setStep]       = useState(0);
-  const [arrived, setArrived] = useState(false);
+  const [step, setStep]                   = useState(0);
+  const [arrived, setArrived]             = useState(false);
   const [deviceHeading, setDeviceHeading] = useState(null);
   const [orientationPermission, setOrientationPermission] = useState("prompt");
-  const videoRef  = useRef(null);
-  const canvasRef = useRef(null);
+  const [alignProgress, setAlignProgress] = useState(0);
+  const videoRef    = useRef(null);
+  const canvasRef   = useRef(null);
+  const alignedSince = useRef(null);
 
   const getNode = (id) => locations.find((l) => l.id === id);
 
@@ -111,6 +93,30 @@ export default function ARNavigator({ path, locations, onExit }) {
     setStep((s) => Math.max(0, s - 1));
   };
 
+  // Auto-advance when user holds correct direction for 1.5 seconds
+  useEffect(() => {
+    if (!current || arrived || deviceHeading === null) return;
+
+    const targetAngle = { up: 0, right: 90, down: 180, left: 270 }[current.direction] ?? 0;
+    let angleDiff = Math.abs(targetAngle - deviceHeading);
+    if (angleDiff > 180) angleDiff = 360 - angleDiff;
+    const isAligned = angleDiff < 30;
+
+    if (isAligned) {
+      if (!alignedSince.current) alignedSince.current = Date.now();
+      const held = Date.now() - alignedSince.current;
+      setAlignProgress(Math.min(100, (held / 1500) * 100));
+      if (held >= 1500) {
+        alignedSince.current = null;
+        setAlignProgress(0);
+        handleNext();
+      }
+    } else {
+      alignedSince.current = null;
+      setAlignProgress(0);
+    }
+  }, [deviceHeading, current, arrived]);
+
   const requestOrientationPermission = async () => {
     if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
       try {
@@ -128,9 +134,7 @@ export default function ARNavigator({ path, locations, onExit }) {
 
   const startOrientationTracking = () => {
     const handler = (e) => {
-      if (e.alpha !== null) {
-        setDeviceHeading(e.webkitCompassHeading ?? e.alpha);
-      }
+      if (e.alpha !== null) setDeviceHeading(e.webkitCompassHeading ?? e.alpha);
     };
     window.addEventListener("deviceorientationabsolute", handler, true);
     window.addEventListener("deviceorientation", handler, true);
@@ -163,59 +167,28 @@ export default function ARNavigator({ path, locations, onExit }) {
     let offset  = 0;
     let rafId;
 
-    // Compass accuracy indicator
-    const compassActive = deviceHeading !== null;
-    const targetAngle   = { up: 0, right: 90, down: 180, left: 270 }[dir] ?? 0;
-    let angleDiff = compassActive ? Math.abs(targetAngle - deviceHeading) : 999;
-    if (angleDiff > 180) angleDiff = 360 - angleDiff;
-    const isAligned = angleDiff < 30;
-
     function draw() {
       ctx.clearRect(0, 0, W, H);
-
-      // Draw cascading chevrons
       for (let i = 0; i < TOTAL; i++) {
         const t = ((i / TOTAL) + offset) % 1;
         const { x, y, size, alpha } = getChevronProps(t, dir, W, H);
         drawChevron(ctx, x, y, size, alpha);
       }
-
-      // Compass alignment ring at center
-      if (compassActive) {
-        const cx = W / 2;
-        const cy = H * 0.38;
-        ctx.beginPath();
-        ctx.arc(cx, cy, 44, 0, Math.PI * 2);
-        ctx.strokeStyle = isAligned ? "rgba(61,186,126,0.85)" : "rgba(245,197,24,0.7)";
-        ctx.lineWidth   = 3;
-        ctx.shadowColor = isAligned ? "#3dba7e" : "#f5c518";
-        ctx.shadowBlur  = 10;
-        ctx.stroke();
-        ctx.shadowBlur  = 0;
-
-        ctx.font      = "bold 11px Inter, sans-serif";
-        ctx.fillStyle = isAligned ? "#3dba7e" : "#f5c518";
-        ctx.textAlign = "center";
-        ctx.fillText(isAligned ? "✓ ALIGNED" : "ALIGN PHONE", cx, cy + 62);
-      }
-
       offset = (offset + 0.008) % 1;
       rafId  = requestAnimationFrame(draw);
     }
 
     draw();
     return () => cancelAnimationFrame(rafId);
-  }, [current, arrived, deviceHeading]);
+  }, [current, arrived]);
 
   if (path.length === 0) return <p style={{ color: "var(--cream)" }}>No route to display.</p>;
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100vh", overflow: "hidden", background: "#000" }}>
 
-      {/* Camera */}
       <CameraHandler onStream={(ref) => { videoRef.current = ref?.current; }} />
 
-      {/* Cascading arrows canvas */}
       <canvas
         ref={canvasRef}
         style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none" }}
@@ -289,8 +262,8 @@ export default function ARNavigator({ path, locations, onExit }) {
       }}>
         {!arrived ? (
           <>
-            {/* Progress bar */}
-            <div style={{ height: 4, background: "#333", borderRadius: 2, marginBottom: 14, overflow: "hidden" }}>
+            {/* Route progress bar */}
+            <div style={{ height: 4, background: "#333", borderRadius: 2, marginBottom: 8, overflow: "hidden" }}>
               <div style={{
                 width: `${progress}%`, height: "100%",
                 background: "linear-gradient(90deg, #00E5FF, #7c5cbf)",
@@ -298,22 +271,34 @@ export default function ARNavigator({ path, locations, onExit }) {
               }} />
             </div>
 
-            {/* Instruction */}
+            {/* Auto-advance alignment bar */}
+            {alignProgress > 0 && (
+              <div style={{ height: 4, background: "#333", borderRadius: 2, marginBottom: 8, overflow: "hidden" }}>
+                <div style={{
+                  width: `${alignProgress}%`, height: "100%",
+                  background: "linear-gradient(90deg, #3dba7e, #00E5FF)",
+                  transition: "width 0.1s",
+                }} />
+              </div>
+            )}
+            {alignProgress > 0 && (
+              <div style={{ fontSize: 11, color: "#3dba7e", marginBottom: 6, textAlign: "center" }}>
+                ✓ Aligned — auto advancing...
+              </div>
+            )}
+
             <div style={{ fontSize: 17, fontWeight: "bold", marginBottom: 6, color: "#00E5FF" }}>
               {current?.instruction}
             </div>
 
-            {/* From → To */}
             <div style={{ fontSize: 13, opacity: 0.75, marginBottom: 4 }}>
               🚩 {current?.fromLabel} → 📍 {current?.toLabel}
             </div>
 
-            {/* Step counter */}
             <div style={{ fontSize: 12, opacity: 0.5, marginBottom: 16 }}>
               Step {step + 1} of {steps.length}
             </div>
 
-            {/* Buttons */}
             <div style={{ display: "flex", gap: 12 }}>
               <button onClick={handlePrev} disabled={step === 0} style={{
                 flex: 1, padding: 12,
@@ -327,8 +312,7 @@ export default function ARNavigator({ path, locations, onExit }) {
                 flex: 2, padding: 12,
                 background: "linear-gradient(135deg, #00b4cc, #007a8a)",
                 border: "none", borderRadius: 12,
-                color: "white", fontSize: 15, fontWeight: "bold",
-                cursor: "pointer",
+                color: "white", fontSize: 15, fontWeight: "bold", cursor: "pointer",
               }}>
                 {step === steps.length - 1 ? "✅ Arrive" : "Next ▶"}
               </button>
