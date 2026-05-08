@@ -42,7 +42,12 @@
   "library": {
     "label": "Library",
     "x": 6, "y": 0,
-    "neighbors": { "computer_lab": 1, "g2": 1, "g3": 1 }
+    "neighbors": { "computer_lab": 1, "g2": 1, "g3": 1, "library_gate1": 1 }
+  },
+  "library_gate1": {
+    "label": "Library Gate 1",
+    "x": 6, "y": -1,
+    "neighbors": { "library": 1 }
   },
   "g2": {
     "label": "G2",
