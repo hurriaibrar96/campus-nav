@@ -103,58 +103,105 @@ export default function ARNavigator({ path, locations, onExit }) {
     const W     = canvas.width;
     const H     = canvas.height;
     const dir   = current.direction;
-    const TOTAL = 7;
+    const TOTAL = 8;
     let   offset = 0;
     let   rafId;
 
-    function drawChevron(x, y, size, alpha) {
+    // Draw a single chevron pointing UP at (x,y), rotated by angleRad
+    function drawChevron(x, y, size, alpha, angleRad) {
       ctx.save();
       ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
       ctx.translate(x, y);
+      ctx.rotate(angleRad);
       ctx.beginPath();
-      ctx.moveTo(0,           -size * 0.6);
-      ctx.lineTo( size,        size * 0.4);
-      ctx.lineTo( size * 0.5,  size * 0.05);
-      ctx.lineTo(0,            size * 0.5);
-      ctx.lineTo(-size * 0.5,  size * 0.05);
-      ctx.lineTo(-size,        size * 0.4);
+      // Chevron pointing UP
+      ctx.moveTo(0,            -size * 0.55); // tip
+      ctx.lineTo( size * 0.9,   size * 0.35);
+      ctx.lineTo( size * 0.45,  size * 0.05);
+      ctx.lineTo(0,             size * 0.45);
+      ctx.lineTo(-size * 0.45,  size * 0.05);
+      ctx.lineTo(-size * 0.9,   size * 0.35);
       ctx.closePath();
       ctx.fillStyle   = "#00E5FF";
       ctx.shadowColor = "#00E5FF";
-      ctx.shadowBlur  = 14;
+      ctx.shadowBlur  = 16;
+      ctx.fill();
+      // Inner highlight
+      ctx.globalAlpha = Math.max(0, Math.min(1, alpha * 0.4));
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.moveTo(0,            -size * 0.3);
+      ctx.lineTo( size * 0.45,  size * 0.15);
+      ctx.lineTo(0,             size * 0.25);
+      ctx.lineTo(-size * 0.45,  size * 0.15);
+      ctx.closePath();
       ctx.fill();
       ctx.restore();
     }
 
+    // Returns {x, y, size, alpha, angle} for chevron at progress t (0=bottom,1=top)
     function getProps(t) {
-      const perspective = 1 - t * 0.65;
-      const size  = 40 * perspective;
-      const alpha = t < 0.12 ? t / 0.12 : t > 0.82 ? (1 - t) / 0.18 : 1;
-      let x, y;
+      // Perspective: arrows shrink as they go further (higher t = farther)
+      const perspective = 1 - t * 0.72;
+      const size  = 46 * perspective;
+      // Fade in at bottom, fade out at top
+      const alpha = t < 0.1 ? t / 0.1 : t > 0.78 ? (1 - t) / 0.22 : 1;
+
+      let x, y, angle;
+
       if (dir === "up") {
-        x = W / 2;
-        y = H * 0.85 - t * H * 0.65;
+        // Straight forward — all arrows go straight up, centered
+        x     = W / 2;
+        y     = H * 0.88 - t * H * 0.68;
+        angle = 0; // pointing up
+
       } else if (dir === "right") {
-        x = t < 0.4 ? W / 2 : W / 2 + Math.pow((t - 0.4) / 0.6, 2) * W * 0.4;
-        y = H * 0.85 - t * H * 0.5;
+        // First 35% straight, then curve right
+        if (t < 0.35) {
+          x     = W / 2;
+          y     = H * 0.88 - t * H * 0.55;
+          angle = 0;
+        } else {
+          const p = (t - 0.35) / 0.65;
+          const curve = p * p;
+          x     = W / 2 + curve * W * 0.42;
+          y     = H * 0.88 - t * H * 0.55;
+          // Rotate arrow to face the curve direction
+          angle = curve * (Math.PI / 2) * 0.85;
+        }
+
       } else if (dir === "left") {
-        x = t < 0.4 ? W / 2 : W / 2 - Math.pow((t - 0.4) / 0.6, 2) * W * 0.4;
-        y = H * 0.85 - t * H * 0.5;
+        // First 35% straight, then curve left
+        if (t < 0.35) {
+          x     = W / 2;
+          y     = H * 0.88 - t * H * 0.55;
+          angle = 0;
+        } else {
+          const p = (t - 0.35) / 0.65;
+          const curve = p * p;
+          x     = W / 2 - curve * W * 0.42;
+          y     = H * 0.88 - t * H * 0.55;
+          angle = -curve * (Math.PI / 2) * 0.85;
+        }
+
       } else {
-        x = W / 2;
-        y = H * 0.15 + t * H * 0.65;
+        // down — arrows go downward
+        x     = W / 2;
+        y     = H * 0.12 + t * H * 0.68;
+        angle = Math.PI; // pointing down
       }
-      return { x, y, size, alpha };
+
+      return { x, y, size, alpha, angle };
     }
 
     function draw() {
       ctx.clearRect(0, 0, W, H);
       for (let i = 0; i < TOTAL; i++) {
         const t = ((i / TOTAL) + offset) % 1;
-        const { x, y, size, alpha } = getProps(t);
-        drawChevron(x, y, size, alpha);
+        const { x, y, size, alpha, angle } = getProps(t);
+        drawChevron(x, y, size, alpha, angle);
       }
-      offset = (offset + 0.008) % 1;
+      offset = (offset + 0.007) % 1;
       rafId  = requestAnimationFrame(draw);
     }
 
