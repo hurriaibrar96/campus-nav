@@ -10,9 +10,6 @@ def get_all_locations() -> list:
     return [{"id": k, "label": v["label"], "x": v["x"], "y": v["y"], "neighbors": v["neighbors"]} for k, v in GRAPH.items()]
 
 def get_path(start: str, end: str) -> list:
-    # Normalize to lowercase to handle any case mismatch from QR codes
-    start = start.lower().strip()
-    end   = end.lower().strip()
     if start not in GRAPH or end not in GRAPH:
         return []
     heap, visited = [(0, start, [start])], set()

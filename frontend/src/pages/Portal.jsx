@@ -33,11 +33,10 @@ export default function Portal() {
 
   const handleNavigate = async () => {
     setError(""); setPath([]); setLoading(true);
-    const startLocation = scannedLocation || "entrance";
-    if (!destination) { setError("Please select a destination."); setLoading(false); return; }
-    if (startLocation === destination) { setError("You are already there!"); setLoading(false); return; }
+    if (!scannedLocation || !destination) { setError("Please select a destination."); setLoading(false); return; }
+    if (scannedLocation === destination)  { setError("You are already there!"); setLoading(false); return; }
     try {
-      const { data } = await api.get("/navigation/route", { params: { start: startLocation, end: destination } });
+      const { data } = await api.get("/navigation/route", { params: { start: scannedLocation, end: destination } });
       setPath(data.path);
     } catch {
       setError("No path found. Try a different destination.");

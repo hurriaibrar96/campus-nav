@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../services/api";
 
@@ -27,7 +27,13 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
 
-  const update = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  // If user already registered before, skip registration and go straight to portal
+  useEffect(() => {
+    const registered = localStorage.getItem("campus_registered");
+    if (registered && location) {
+      navigate(`/portal?location=${location}`, { replace: true });
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,6 +43,7 @@ export default function Home() {
     }
     try {
       await api.post("/user/register", form);
+      localStorage.setItem("campus_registered", "true");
       setShowPopup(true);
     } catch (err) {
       setError(err.response?.data?.detail ?? "Registration failed. Please try again.");
@@ -108,14 +115,14 @@ export default function Home() {
             <label>Username</label>
             <input className="input" name="username" type="text"
               placeholder="Your full name"
-              value={form.username} onChange={update} required />
+              value={form.username} onChange={(e) => setForm({ ...form, [e.target.name]: e.target.value })} required />
           </div>
 
           <div className="form-group">
             <label>Email</label>
             <input className="input" name="email" type="email"
               placeholder="you@university.edu"
-              value={form.email} onChange={update} required />
+              value={form.email} onChange={(e) => setForm({ ...form, [e.target.name]: e.target.value })} required />
           </div>
 
           {/* Student toggle */}
