@@ -1,112 +1,112 @@
 {
   "entrance": {
-    "label": "Entrance (Towards Medan)",
+    "label": "Entrance",
     "x": 0, "y": 0,
     "neighbors": { "carbs_dept": 1 }
   },
   "carbs_dept": {
     "label": "Carbs Department",
-    "x": 1, "y": 0,
+    "x": 2, "y": 1.5,
     "neighbors": { "entrance": 1, "boys_washroom": 1 }
   },
   "boys_washroom": {
     "label": "Boys Washroom",
-    "x": 2, "y": 0,
+    "x": 4, "y": 3,
     "neighbors": { "carbs_dept": 1, "stairs_1": 1, "emergency_exit": 1 }
   },
   "stairs_1": {
     "label": "Stairs 1 (First Floor)",
-    "x": 2, "y": 1,
+    "x": 3.5, "y": 5,
     "neighbors": { "boys_washroom": 1 }
   },
   "emergency_exit": {
     "label": "Emergency Exit",
-    "x": 3, "y": 0,
+    "x": 6, "y": 4,
     "neighbors": { "boys_washroom": 1, "sitting_area1": 1 }
   },
   "sitting_area1": {
     "label": "Sitting Area 1",
-    "x": 4, "y": 0,
+    "x": 8, "y": 5,
     "neighbors": { "emergency_exit": 1, "stairs_2": 1, "computer_lab": 1 }
   },
   "stairs_2": {
     "label": "Stairs 2 (First Floor)",
-    "x": 4, "y": 1,
+    "x": 7, "y": 6.5,
     "neighbors": { "sitting_area1": 1 }
   },
   "computer_lab": {
     "label": "Computer Lab",
-    "x": 5, "y": 0,
+    "x": 10, "y": 6,
     "neighbors": { "sitting_area1": 1, "library": 1 }
   },
   "library": {
     "label": "Library",
-    "x": 6, "y": 0,
-    "neighbors": { "computer_lab": 1, "g2": 1, "g3": 1, "library_gate1": 1 }
+    "x": 12, "y": 7,
+    "neighbors": { "computer_lab": 1, "g2": 1, "sitting_area2": 1, "library_gate1": 1 }
   },
   "library_gate1": {
     "label": "Library Gate 1",
-    "x": 6, "y": -1,
+    "x": 11, "y": 5.5,
     "neighbors": { "library": 1 }
   },
   "g2": {
     "label": "G2",
-    "x": 6, "y": 1,
+    "x": 13, "y": 8.5,
     "neighbors": { "library": 1 }
-  },
-  "g3": {
-    "label": "G3",
-    "x": 7, "y": 0,
-    "neighbors": { "library": 1, "sitting_area2": 1 }
   },
   "sitting_area2": {
     "label": "Sitting Area 2",
-    "x": 8, "y": 0,
-    "neighbors": { "g3": 1, "medan": 1, "g4": 1, "aerolab": 1 }
+    "x": 14, "y": 7.5,
+    "neighbors": { "library": 1, "medan": 1, "g3": 1, "g4": 1, "aerolab": 1 }
+  },
+  "g3": {
+    "label": "G3",
+    "x": 15, "y": 8,
+    "neighbors": { "sitting_area2": 1 }
   },
   "medan": {
     "label": "Towards Medan",
-    "x": 9, "y": 0,
+    "x": 16, "y": 7,
     "neighbors": { "sitting_area2": 1 }
   },
   "g4": {
     "label": "G4",
-    "x": 8, "y": 1,
+    "x": 15, "y": 9,
     "neighbors": { "sitting_area2": 1 }
   },
   "aerolab": {
     "label": "Aerolab",
-    "x": 8, "y": -1,
-    "neighbors": { "sitting_area2": 1, "girls_washroom": 1, "stairs_3": 1, "ahs_faculty": 1, "aerolab2": 1 }
+    "x": 14, "y": 11,
+    "neighbors": { "sitting_area2": 1, "girls_washroom": 1, "ahs_faculty": 1, "aerolab2": 1 }
   },
   "girls_washroom": {
     "label": "Girls Washroom",
-    "x": 7, "y": -1,
+    "x": 12, "y": 12,
     "neighbors": { "aerolab": 1, "stairs_3": 1 }
   },
   "stairs_3": {
     "label": "Stairs 3 (First Floor)",
-    "x": 7, "y": -2,
-    "neighbors": { "aerolab": 1, "girls_washroom": 1, "aircraft_showroom": 1 }
+    "x": 12, "y": 14,
+    "neighbors": { "girls_washroom": 1, "aircraft_showroom": 1 }
   },
   "aircraft_showroom": {
     "label": "Aircraft Showroom",
-    "x": 7, "y": -3,
+    "x": 12, "y": 16,
     "neighbors": { "stairs_3": 1 }
   },
   "ahs_faculty": {
     "label": "AHS Faculty",
-    "x": 9, "y": -1,
+    "x": 16, "y": 12,
     "neighbors": { "aerolab": 1, "aerolab2": 1 }
   },
   "aerolab2": {
     "label": "Aerolab 2",
-    "x": 10, "y": -1,
-    "neighbors": { "aerolab": 1, "ahs_faculty": 1, "bookshop_exit": 1 }
+    "x": 17, "y": 13.5,
+    "neighbors": { "ahs_faculty": 1, "bookshop_exit": 1 }
   },
   "bookshop_exit": {
     "label": "Exit Towards Bookshop",
-    "x": 11, "y": -1,
+    "x": 18, "y": 15,
     "neighbors": { "aerolab2": 1 }
   }
 }
