@@ -7,17 +7,32 @@
   "carbs_dept": {
     "label": "Carbs Department",
     "x": 2, "y": 1.5,
-    "neighbors": { "entrance": 1, "boys_washroom": 1 }
+    "neighbors": { "entrance": 1, "corridor": 1 }
+  },
+  "corridor": {
+    "label": "Corridor (indirect path)",
+    "x": 3, "y": 2.5,
+    "neighbors": { "carbs_dept": 1, "boys_washroom": 1 }
   },
   "boys_washroom": {
     "label": "Boys Washroom",
     "x": 4, "y": 3,
-    "neighbors": { "carbs_dept": 1, "stairs_1": 1, "emergency_exit": 1 }
+    "neighbors": { "corridor": 1, "back_stairs": 1, "stairs_1": 1, "emergency_exit": 1 }
+  },
+  "back_stairs": {
+    "label": "Back Stairs (Outside)",
+    "x": 2, "y": 5,
+    "neighbors": { "boys_washroom": 1 }
   },
   "stairs_1": {
-    "label": "Stairs 1 (First Floor)",
+    "label": "Stairs 1 (to 1st Floor)",
     "x": 3.5, "y": 5,
-    "neighbors": { "boys_washroom": 1 }
+    "neighbors": { "boys_washroom": 1, "stage": 1 }
+  },
+  "stage": {
+    "label": "Stage (Main Building)",
+    "x": 5.5, "y": 5,
+    "neighbors": { "stairs_1": 1 }
   },
   "emergency_exit": {
     "label": "Emergency Exit",
@@ -30,83 +45,93 @@
     "neighbors": { "emergency_exit": 1, "stairs_2": 1, "computer_lab": 1 }
   },
   "stairs_2": {
-    "label": "Stairs 2 (First Floor)",
+    "label": "Stairs 2 (to 1st Floor)",
     "x": 7, "y": 6.5,
     "neighbors": { "sitting_area1": 1 }
   },
   "computer_lab": {
-    "label": "Computer Lab",
+    "label": "Computer Lab 1",
     "x": 10, "y": 6,
-    "neighbors": { "sitting_area1": 1, "library": 1 }
-  },
-  "library": {
-    "label": "Library",
-    "x": 12, "y": 7,
-    "neighbors": { "computer_lab": 1, "g2": 1, "sitting_area2": 1, "library_gate1": 1 }
+    "neighbors": { "sitting_area1": 1, "library_gate1": 1 }
   },
   "library_gate1": {
     "label": "Library Gate 1",
     "x": 11, "y": 5.5,
-    "neighbors": { "library": 1 }
+    "neighbors": { "computer_lab": 1, "gate2": 1, "g2": 1, "g3": 1, "sitting_area2": 1 }
+  },
+  "gate2": {
+    "label": "Gate 2 (Open Air)",
+    "x": 12, "y": 4,
+    "neighbors": { "library_gate1": 1 }
   },
   "g2": {
-    "label": "G2",
-    "x": 13, "y": 8.5,
-    "neighbors": { "library": 1 }
+    "label": "G2 (Open Air)",
+    "x": 13, "y": 4.5,
+    "neighbors": { "library_gate1": 1 }
+  },
+  "g3": {
+    "label": "G3 (Straight)",
+    "x": 14, "y": 5.5,
+    "neighbors": { "library_gate1": 1, "sitting_area2": 1 }
   },
   "sitting_area2": {
     "label": "Sitting Area 2",
     "x": 14, "y": 7.5,
-    "neighbors": { "library": 1, "medan": 1, "g3": 1, "g4": 1, "aerolab": 1 }
-  },
-  "g3": {
-    "label": "G3",
-    "x": 15, "y": 8,
-    "neighbors": { "sitting_area2": 1 }
+    "neighbors": { "library_gate1": 1, "g3": 1, "medan": 1, "g4": 1 }
   },
   "medan": {
-    "label": "Towards Medan",
+    "label": "Me (Towards Medan)",
     "x": 16, "y": 7,
     "neighbors": { "sitting_area2": 1 }
   },
   "g4": {
-    "label": "G4",
+    "label": "G4 (AHS Wing)",
     "x": 15, "y": 9,
-    "neighbors": { "sitting_area2": 1 }
+    "neighbors": { "sitting_area2": 1, "aerolab": 1 }
   },
   "aerolab": {
-    "label": "Aerolab",
+    "label": "Aerolab (Entry Point)",
     "x": 14, "y": 11,
-    "neighbors": { "sitting_area2": 1, "girls_washroom": 1, "ahs_faculty": 1, "aerolab2": 1 }
-  },
-  "girls_washroom": {
-    "label": "Girls Washroom",
-    "x": 12, "y": 12,
-    "neighbors": { "aerolab": 1, "stairs_3": 1 }
+    "neighbors": { "g4": 1, "stairs_3": 1, "ahs_faculty": 1, "aircraft_showroom": 1 }
   },
   "stairs_3": {
-    "label": "Stairs 3 (First Floor)",
-    "x": 12, "y": 14,
-    "neighbors": { "girls_washroom": 1, "aircraft_showroom": 1 }
+    "label": "Stairs 3 (to 1st Floor)",
+    "x": 16, "y": 10,
+    "neighbors": { "aerolab": 1 }
   },
   "aircraft_showroom": {
     "label": "Aircraft Showroom",
-    "x": 12, "y": 16,
-    "neighbors": { "stairs_3": 1 }
+    "x": 17, "y": 12,
+    "neighbors": { "aerolab": 1, "avionics_lab": 1 }
   },
-  "ahs_faculty": {
-    "label": "AHS Faculty",
-    "x": 16, "y": 12,
-    "neighbors": { "aerolab": 1, "aerolab2": 1 }
-  },
-  "aerolab2": {
-    "label": "Aerolab 2",
+  "avionics_lab": {
+    "label": "Avionics Lab",
     "x": 17, "y": 13.5,
-    "neighbors": { "ahs_faculty": 1, "bookshop_exit": 1 }
+    "neighbors": { "aircraft_showroom": 1, "student_counter": 1 }
+  },
+  "student_counter": {
+    "label": "Student Counter",
+    "x": 17, "y": 15,
+    "neighbors": { "avionics_lab": 1, "bookshop_exit": 1 }
   },
   "bookshop_exit": {
-    "label": "Exit Towards Bookshop",
-    "x": 18, "y": 15,
-    "neighbors": { "aerolab2": 1 }
+    "label": "Exit (Towards Bookshop)",
+    "x": 17, "y": 16.5,
+    "neighbors": { "student_counter": 1, "aerolab2": 1 }
+  },
+  "aerolab2": {
+    "label": "Aerolab 2 (Right of Corridor Exit)",
+    "x": 15, "y": 16.5,
+    "neighbors": { "bookshop_exit": 1, "ahs_faculty": 1 }
+  },
+  "ahs_faculty": {
+    "label": "AHS Faculty (Large Room, Left Side)",
+    "x": 13, "y": 14,
+    "neighbors": { "aerolab": 1, "aerolab2": 1 }
+  },
+  "girls_washroom": {
+    "label": "Girls Washroom (Separate Block)",
+    "x": 11, "y": 16,
+    "neighbors": { "ahs_faculty": 1 }
   }
 }
