@@ -4,47 +4,102 @@ import CameraHandler from "./CameraHandler";
 function getDirection(from, to) {
   const dx = to.x - from.x;
   const dy = to.y - from.y;
-  
-  // Real campus layout: Main corridor goes forward (X-axis)
-  // Side rooms are left/right (Y-axis)
-  if (Math.abs(dx) > Math.abs(dy)) {
-    return dx > 0 ? "up" : "down";  // X+ = forward, X- = backward
-  }
-  return dy > 0 ? "left" : "right";  // Y+ = left, Y- = right
+  if (Math.abs(dx) > Math.abs(dy)) return dx > 0 ? "up" : "down";
+  return dy > 0 ? "left" : "right";
 }
 
-const ARROW = { up: "⬆️", down: "⬇️", left: "⬅️", right: "➡️" };
 const LABEL = { up: "⬆ Go Forward", down: "⬇ Go Back", left: "⬅ Turn Left", right: "➡ Turn Right" };
+
+// Draw a single filled chevron pointing UP at (x,y)
+function drawChevron(ctx, x, y, size, alpha) {
+  ctx.save();
+  ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+  ctx.translate(x, y);
+  ctx.beginPath();
+  ctx.moveTo(0,          -size * 0.6);
+  ctx.lineTo( size,       size * 0.4);
+  ctx.lineTo( size * 0.5, size * 0.05);
+  ctx.lineTo(0,           size * 0.5);
+  ctx.lineTo(-size * 0.5, size * 0.05);
+  ctx.lineTo(-size,       size * 0.4);
+  ctx.closePath();
+  ctx.fillStyle  = "#00E5FF";
+  ctx.shadowColor = "#00E5FF";
+  ctx.shadowBlur  = 14;
+  ctx.fill();
+  ctx.restore();
+}
+
+// Compute (x, y, size, alpha) for chevron at progress t (0=bottom, 1=top)
+function getChevronProps(t, dir, W, H) {
+  const perspective = 1 - t * 0.65;
+  const size  = 40 * perspective;
+  const alpha = t < 0.12 ? t / 0.12
+              : t > 0.82 ? (1 - t) / 0.18
+              : 1;
+  let x, y;
+
+  if (dir === "up") {
+    x = W / 2;
+    y = H * 0.85 - t * H * 0.65;
+
+  } else if (dir === "right") {
+    if (t < 0.4) {
+      x = W / 2;
+      y = H * 0.85 - t * H * 0.5;
+    } else {
+      const p = (t - 0.4) / 0.6;
+      x = W / 2 + p * p * W * 0.4;
+      y = H * 0.85 - t * H * 0.5;
+    }
+
+  } else if (dir === "left") {
+    if (t < 0.4) {
+      x = W / 2;
+      y = H * 0.85 - t * H * 0.5;
+    } else {
+      const p = (t - 0.4) / 0.6;
+      x = W / 2 - p * p * W * 0.4;
+      y = H * 0.85 - t * H * 0.5;
+    }
+
+  } else {
+    // down
+    x = W / 2;
+    y = H * 0.15 + t * H * 0.65;
+  }
+
+  return { x, y, size, alpha };
+}
 
 export default function ARNavigator({ path, locations, onExit }) {
   const [step, setStep]       = useState(0);
   const [arrived, setArrived] = useState(false);
   const [deviceHeading, setDeviceHeading] = useState(null);
-  const [orientationPermission, setOrientationPermission] = useState('prompt');
-  const videoRef = useRef(null);
+  const [orientationPermission, setOrientationPermission] = useState("prompt");
+  const videoRef  = useRef(null);
   const canvasRef = useRef(null);
 
   const getNode = (id) => locations.find((l) => l.id === id);
 
   const steps = path.slice(0, -1).map((id, i) => {
-    const toId   = path[i + 1];
-    const from   = getNode(id);
-    const to     = getNode(toId);
-    const dir    = from && to ? getDirection(from, to) : "right";
+    const toId = path[i + 1];
+    const from = getNode(id);
+    const to   = getNode(toId);
+    const dir  = from && to ? getDirection(from, to) : "up";
     return {
-      fromId:    id,
-      fromLabel: from?.label ?? id,
+      fromId:      id,
+      fromLabel:   from?.label ?? id,
       toId,
-      toLabel:   to?.label ?? toId,
-      direction: dir,
+      toLabel:     to?.label ?? toId,
+      direction:   dir,
       instruction: `${LABEL[dir]} → ${to?.label ?? toId}`,
     };
   });
 
-  const current     = steps[step];
-  const progress    = steps.length > 0 ? ((step + 1) / steps.length) * 100 : 100;
-  const startLabel  = getNode(path[0])?.label ?? path[0];
-  const endLabel    = getNode(path[path.length - 1])?.label ?? path[path.length - 1];
+  const current  = steps[step];
+  const progress = steps.length > 0 ? ((step + 1) / steps.length) * 100 : 100;
+  const endLabel = getNode(path[path.length - 1])?.label ?? path[path.length - 1];
 
   const handleNext = () => {
     if (step < steps.length - 1) setStep((s) => s + 1);
@@ -56,156 +111,101 @@ export default function ARNavigator({ path, locations, onExit }) {
     setStep((s) => Math.max(0, s - 1));
   };
 
-  // Request orientation permission
   const requestOrientationPermission = async () => {
-    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+    if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
       try {
-        const response = await DeviceOrientationEvent.requestPermission();
-        setOrientationPermission(response);
-        if (response === 'granted') {
-          startOrientationTracking();
-        }
-      } catch (error) {
-        console.error('Orientation permission error:', error);
-        setOrientationPermission('denied');
+        const res = await DeviceOrientationEvent.requestPermission();
+        setOrientationPermission(res);
+        if (res === "granted") startOrientationTracking();
+      } catch (e) {
+        setOrientationPermission("denied");
       }
     } else {
-      setOrientationPermission('granted');
+      setOrientationPermission("granted");
       startOrientationTracking();
     }
   };
 
-  // Start tracking device orientation
   const startOrientationTracking = () => {
-    const handleOrientation = (event) => {
-      if (event.alpha !== null) {
-        let heading = event.alpha;
-        if (event.webkitCompassHeading) {
-          heading = event.webkitCompassHeading; // iOS
-        }
-        setDeviceHeading(heading);
+    const handler = (e) => {
+      if (e.alpha !== null) {
+        setDeviceHeading(e.webkitCompassHeading ?? e.alpha);
       }
     };
-
-    window.addEventListener('deviceorientationabsolute', handleOrientation, true);
-    window.addEventListener('deviceorientation', handleOrientation, true);
+    window.addEventListener("deviceorientationabsolute", handler, true);
+    window.addEventListener("deviceorientation", handler, true);
   };
 
-  // Draw arrow on canvas whenever heading or step changes
+  useEffect(() => {
+    if (typeof DeviceOrientationEvent === "undefined" || typeof DeviceOrientationEvent.requestPermission !== "function") {
+      setOrientationPermission("granted");
+      startOrientationTracking();
+    }
+    return () => {
+      window.removeEventListener("deviceorientationabsolute", startOrientationTracking, true);
+      window.removeEventListener("deviceorientation", startOrientationTracking, true);
+    };
+  }, []);
+
+  // Cascading floor arrows animation
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !current || arrived) return;
 
-    const ctx = canvas.getContext("2d");
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2 - 60;
-    const dir = current.direction;
+    const ctx   = canvas.getContext("2d");
+    const W     = canvas.width;
+    const H     = canvas.height;
+    const dir   = current.direction;
+    const TOTAL = 7;
+    let offset  = 0;
+    let rafId;
 
-    // If compass is not working (deviceHeading = null), just show static arrow
+    // Compass accuracy indicator
     const compassActive = deviceHeading !== null;
-    
-    let relativeRad = 0;
-    let isCorrectDirection = false;
-    
-    if (compassActive) {
-      // Calculate target angle based on map direction
-      const targetAngle = { up: 0, right: 90, down: 180, left: 270 }[dir] ?? 0;
-      
-      // Calculate relative angle: how far off from target
-      let angleDiff = Math.abs(targetAngle - deviceHeading);
-      if (angleDiff > 180) angleDiff = 360 - angleDiff; // Shortest angle
-      
-      const relativeAngle = ((targetAngle - deviceHeading + 360) % 360);
-      relativeRad = relativeAngle * (Math.PI / 180);
-      
-      // Check if user is facing the correct direction (within 30 degrees)
-      isCorrectDirection = angleDiff < 30;
-    } else {
-      // No compass - show static arrow pointing in direction
-      const staticAngles = { up: -Math.PI/2, right: 0, down: Math.PI/2, left: Math.PI };
-      relativeRad = staticAngles[dir] ?? 0;
-    }
-    
-    const circleColor = compassActive ? (isCorrectDirection ? "rgba(61,186,126,0.35)" : "rgba(245,197,24,0.35)") : "rgba(124,92,191,0.35)";
-    const borderColor = compassActive ? (isCorrectDirection ? "rgba(61,186,126,0.9)" : "rgba(245,197,24,0.9)") : "rgba(124,92,191,0.9)";
-    const bgColor = compassActive ? (isCorrectDirection ? "rgba(26,61,40,0.75)" : "rgba(61,40,26,0.75)") : "rgba(26,10,61,0.75)";
+    const targetAngle   = { up: 0, right: 90, down: 180, left: 270 }[dir] ?? 0;
+    let angleDiff = compassActive ? Math.abs(targetAngle - deviceHeading) : 999;
+    if (angleDiff > 180) angleDiff = 360 - angleDiff;
+    const isAligned = angleDiff < 30;
 
-    // Outer glow ring
-    const grad = ctx.createRadialGradient(cx, cy, 40, cx, cy, 90);
-    grad.addColorStop(0, circleColor);
-    grad.addColorStop(1, "rgba(124,92,191,0)");
-    ctx.beginPath();
-    ctx.arc(cx, cy, 90, 0, Math.PI * 2);
-    ctx.fillStyle = grad;
-    ctx.fill();
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
 
-    // Circle background
-    ctx.beginPath();
-    ctx.arc(cx, cy, 58, 0, Math.PI * 2);
-    ctx.fillStyle = bgColor;
-    ctx.fill();
-    ctx.strokeStyle = borderColor;
-    ctx.lineWidth = 3;
-    ctx.stroke();
+      // Draw cascading chevrons
+      for (let i = 0; i < TOTAL; i++) {
+        const t = ((i / TOTAL) + offset) % 1;
+        const { x, y, size, alpha } = getChevronProps(t, dir, W, H);
+        drawChevron(ctx, x, y, size, alpha);
+      }
 
-    // Draw geometric arrow
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(relativeRad);
+      // Compass alignment ring at center
+      if (compassActive) {
+        const cx = W / 2;
+        const cy = H * 0.38;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 44, 0, Math.PI * 2);
+        ctx.strokeStyle = isAligned ? "rgba(61,186,126,0.85)" : "rgba(245,197,24,0.7)";
+        ctx.lineWidth   = 3;
+        ctx.shadowColor = isAligned ? "#3dba7e" : "#f5c518";
+        ctx.shadowBlur  = 10;
+        ctx.stroke();
+        ctx.shadowBlur  = 0;
 
-    // Arrow shaft
-    ctx.beginPath();
-    ctx.moveTo(-22, 0);
-    ctx.lineTo(14, 0);
-    ctx.strokeStyle = "#fdf6ec";
-    ctx.lineWidth = 7;
-    ctx.lineCap = "round";
-    ctx.stroke();
+        ctx.font      = "bold 11px Inter, sans-serif";
+        ctx.fillStyle = isAligned ? "#3dba7e" : "#f5c518";
+        ctx.textAlign = "center";
+        ctx.fillText(isAligned ? "✓ ALIGNED" : "ALIGN PHONE", cx, cy + 62);
+      }
 
-    // Arrowhead (filled triangle)
-    ctx.beginPath();
-    ctx.moveTo(30, 0);
-    ctx.lineTo(10, -14);
-    ctx.lineTo(10, 14);
-    ctx.closePath();
-    ctx.fillStyle = "#fdf6ec";
-    ctx.fill();
-
-    ctx.restore();
-
-    // Direction label below circle
-    ctx.font = "bold 13px Inter, sans-serif";
-    ctx.fillStyle = compassActive && isCorrectDirection ? "rgba(61,186,126,0.95)" : "rgba(253,246,236,0.85)";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-    ctx.shadowColor = "rgba(0,0,0,0.8)";
-    ctx.shadowBlur = 8;
-    
-    const directionText = { up: "GO FORWARD", down: "GO BACK", left: "TURN LEFT", right: "TURN RIGHT" }[dir] ?? "";
-    const statusText = compassActive ? (isCorrectDirection ? "✓ CORRECT DIRECTION" : directionText) : directionText;
-    
-    ctx.fillText(statusText, cx, cy + 68);
-  }, [deviceHeading, current, arrived]);
-
-  // Track device orientation
-  useEffect(() => {
-    // Auto-start for non-iOS or check permission
-    if (typeof DeviceOrientationEvent === 'undefined' || typeof DeviceOrientationEvent.requestPermission !== 'function') {
-      setOrientationPermission('granted');
-      startOrientationTracking();
-    } else {
-      setOrientationPermission('prompt');
+      offset = (offset + 0.008) % 1;
+      rafId  = requestAnimationFrame(draw);
     }
 
-    return () => {
-      window.removeEventListener('deviceorientationabsolute', startOrientationTracking, true);
-      window.removeEventListener('deviceorientation', startOrientationTracking, true);
-    };
-  }, []);
+    draw();
+    return () => cancelAnimationFrame(rafId);
+  }, [current, arrived, deviceHeading]);
 
   if (path.length === 0) return <p style={{ color: "var(--cream)" }}>No route to display.</p>;
 
@@ -215,14 +215,14 @@ export default function ARNavigator({ path, locations, onExit }) {
       {/* Camera */}
       <CameraHandler onStream={(ref) => { videoRef.current = ref?.current; }} />
 
-      {/* Canvas arrow overlay */}
+      {/* Cascading arrows canvas */}
       <canvas
         ref={canvasRef}
         style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none" }}
       />
 
-      {/* Permission prompt for iOS */}
-      {orientationPermission === 'prompt' && (
+      {/* iOS compass permission prompt */}
+      {orientationPermission === "prompt" && (
         <div style={{
           position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
           background: "rgba(15,8,40,0.95)", backdropFilter: "blur(20px)",
@@ -231,7 +231,7 @@ export default function ARNavigator({ path, locations, onExit }) {
         }}>
           <div style={{ fontSize: "3rem", marginBottom: 12 }}>🧭</div>
           <h3 style={{ color: "#fdf6ec", fontSize: "1.1rem", fontWeight: 700, marginBottom: 8 }}>Enable Compass</h3>
-          <p style={{ color: "rgba(253,246,236,0.7)", fontSize: "0.85rem", marginBottom: 20 }}>Allow access to device orientation for accurate AR navigation</p>
+          <p style={{ color: "rgba(253,246,236,0.7)", fontSize: "0.85rem", marginBottom: 20 }}>Allow compass access for accurate AR navigation</p>
           <button onClick={requestOrientationPermission} style={{
             width: "100%", padding: "12px",
             background: "linear-gradient(135deg, #7c5cbf, #4a2c9e)",
@@ -256,7 +256,6 @@ export default function ARNavigator({ path, locations, onExit }) {
             background: "rgba(124,92,191,0.2)",
             display: "flex", alignItems: "center", justifyContent: "center",
             border: "2px solid rgba(124,92,191,0.5)",
-            position: "relative"
           }}>
             <div style={{
               fontSize: "1.2rem",
@@ -267,7 +266,9 @@ export default function ARNavigator({ path, locations, onExit }) {
           <div>
             <div style={{ fontSize: "0.65rem", color: "#9b7fd4", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700, marginBottom: 2 }}>Navigating to</div>
             <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "#fdf6ec" }}>{endLabel}</div>
-            <div style={{ fontSize: "0.65rem", color: deviceHeading === null ? "#ff6b6b" : "#6ee7b7", marginTop: 4 }}>Compass: {deviceHeading === null ? "Not Active" : `${Math.round(deviceHeading)}°`}</div>
+            <div style={{ fontSize: "0.65rem", color: deviceHeading === null ? "#ff6b6b" : "#6ee7b7", marginTop: 2 }}>
+              {deviceHeading === null ? "Compass: Not Active" : `Compass: ${Math.round(deviceHeading)}°`}
+            </div>
           </div>
         </div>
         <button onClick={onExit} style={{
@@ -282,23 +283,23 @@ export default function ARNavigator({ path, locations, onExit }) {
         position: "absolute", bottom: 20, left: 16, right: 16,
         background: "rgba(10,10,10,0.92)", backdropFilter: "blur(20px)",
         borderRadius: 24, padding: "20px",
-        border: "1px solid rgba(245,197,24,0.25)",
+        border: "1px solid rgba(0,229,255,0.2)",
         color: "white", fontFamily: "Inter, sans-serif",
         boxShadow: "0 -4px 32px rgba(0,0,0,0.5)", zIndex: 10,
       }}>
         {!arrived ? (
           <>
             {/* Progress bar */}
-            <div style={{ height: 4, background: "#444", borderRadius: 2, marginBottom: 14, overflow: "hidden" }}>
+            <div style={{ height: 4, background: "#333", borderRadius: 2, marginBottom: 14, overflow: "hidden" }}>
               <div style={{
                 width: `${progress}%`, height: "100%",
-                background: "linear-gradient(90deg, #7c5cbf, #9b59b6)",
+                background: "linear-gradient(90deg, #00E5FF, #7c5cbf)",
                 transition: "width 0.3s",
               }} />
             </div>
 
             {/* Instruction */}
-            <div style={{ fontSize: 17, fontWeight: "bold", marginBottom: 6 }}>
+            <div style={{ fontSize: 17, fontWeight: "bold", marginBottom: 6, color: "#00E5FF" }}>
               {current?.instruction}
             </div>
 
@@ -316,7 +317,7 @@ export default function ARNavigator({ path, locations, onExit }) {
             <div style={{ display: "flex", gap: 12 }}>
               <button onClick={handlePrev} disabled={step === 0} style={{
                 flex: 1, padding: 12,
-                background: step === 0 ? "#444" : "#555",
+                background: step === 0 ? "#333" : "#444",
                 border: "none", borderRadius: 12,
                 color: "white", fontSize: 15,
                 cursor: step === 0 ? "not-allowed" : "pointer",
@@ -324,7 +325,7 @@ export default function ARNavigator({ path, locations, onExit }) {
 
               <button onClick={handleNext} style={{
                 flex: 2, padding: 12,
-                background: "linear-gradient(135deg, #7c5cbf, #4a2c9e)",
+                background: "linear-gradient(135deg, #00b4cc, #007a8a)",
                 border: "none", borderRadius: 12,
                 color: "white", fontSize: 15, fontWeight: "bold",
                 cursor: "pointer",
@@ -340,7 +341,7 @@ export default function ARNavigator({ path, locations, onExit }) {
             <div style={{ fontSize: 13, opacity: 0.75, marginBottom: 16 }}>{endLabel} reached successfully</div>
             <button onClick={onExit} style={{
               padding: "12px 32px",
-              background: "linear-gradient(135deg, #7c5cbf, #4a2c9e)",
+              background: "linear-gradient(135deg, #00b4cc, #007a8a)",
               border: "none", borderRadius: 12,
               color: "white", fontSize: 15, fontWeight: "bold", cursor: "pointer",
             }}>Done</button>
