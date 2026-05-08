@@ -17,3 +17,14 @@ async def register(body: UserCreate):
         "faculty":    body.faculty if body.is_student else None,
     })
     return {"message": "Registered successfully"}
+
+@router.post("/login")
+async def login(body: dict):
+    email = body.get("email", "").strip()
+    if not email:
+        raise HTTPException(400, "Email is required")
+    db = get_db()
+    user = await db.users.find_one({"email": email})
+    if not user:
+        raise HTTPException(404, "No account found with this email")
+    return {"message": "Login successful", "username": user["username"], "email": user["email"]}

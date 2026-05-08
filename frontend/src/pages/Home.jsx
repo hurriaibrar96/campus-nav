@@ -22,18 +22,20 @@ export default function Home() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const location = searchParams.get("location") || "";
+
+  const [tab, setTab]         = useState("login"); // "login" | "register"
   const [form, setForm]       = useState({ username: "", email: "", is_student: false, faculty: "" });
+  const [loginEmail, setLoginEmail] = useState("");
   const [error, setError]     = useState("");
   const [loading, setLoading] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
+  const [welcomeName, setWelcomeName] = useState("");
 
-  // Remove body background so image shows through
   useEffect(() => {
     document.body.classList.add("home-bg");
     return () => document.body.classList.remove("home-bg");
   }, []);
 
-  // If user already registered before, skip registration and go straight to portal
   useEffect(() => {
     const registered = localStorage.getItem("campus_registered");
     if (registered && location) {
@@ -41,7 +43,20 @@ export default function Home() {
     }
   }, []);
 
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError(""); setLoading(true);
+    try {
+      const { data } = await api.post("/user/login", { email: loginEmail });
+      setWelcomeName(data.username);
+      localStorage.setItem("campus_registered", "true");
+      setShowPopup(true);
+    } catch (err) {
+      setError(err.response?.data?.detail ?? "No account found. Please register first.");
+    } finally { setLoading(false); }
+  };
+
+  const handleRegister = async (e) => {
     e.preventDefault();
     setError(""); setLoading(true);
     if (form.is_student && !form.faculty) {
@@ -49,6 +64,7 @@ export default function Home() {
     }
     try {
       await api.post("/user/register", form);
+      setWelcomeName(form.username);
       localStorage.setItem("campus_registered", "true");
       setShowPopup(true);
     } catch (err) {
@@ -56,10 +72,19 @@ export default function Home() {
     } finally { setLoading(false); }
   };
 
+  const cardStyle = {
+    width: "100%", maxWidth: 440,
+    background: "rgba(253,246,236,0.85)",
+    backdropFilter: "blur(12px)",
+    borderRadius: 14,
+    boxShadow: "0 8px 32px rgba(123,45,139,0.18)",
+    padding: "2.5rem",
+  };
+
   return (
     <div className="page-center" style={{ backgroundImage: "url('/dee.jpeg')", backgroundSize: "cover", backgroundPosition: "center", backgroundRepeat: "no-repeat", minHeight: "100vh", position: "relative" }}>
 
-      {/* ── Popup ── */}
+      {/* Popup */}
       {showPopup && (
         <div style={{
           position: "fixed", inset: 0, zIndex: 999,
@@ -72,11 +97,9 @@ export default function Home() {
             boxShadow: "0 20px 60px rgba(123,45,139,0.3)"
           }}>
             <div style={{ fontSize: "3.5rem", marginBottom: "1rem" }}>✅</div>
-            <h2 style={{ fontWeight: 700, color: "#2a0a30", fontSize: "1.3rem", marginBottom: "0.5rem" }}>
-              Data Saved!
-            </h2>
+            <h2 style={{ fontWeight: 700, color: "#2a0a30", fontSize: "1.3rem", marginBottom: "0.5rem" }}>Welcome!</h2>
             <p style={{ color: "#7B2D8B", fontSize: "0.9rem", marginBottom: "1.75rem" }}>
-              Welcome, <strong>{form.username}</strong>! Your details have been saved successfully.
+              Hello, <strong>{welcomeName}</strong>! Ready to navigate campus?
             </p>
             <button
               onClick={() => navigate(location ? `/portal?location=${location}` : "/portal")}
@@ -94,11 +117,10 @@ export default function Home() {
         </div>
       )}
 
-      {/* ── Register Card ── */}
-      <div className="card" style={{ width: "100%", maxWidth: 440, background: "rgba(253,246,236,0.85)", backdropFilter: "blur(12px)" }}>
+      <div style={cardStyle}>
 
         {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+        <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
           <div style={{
             width: 68, height: 68, borderRadius: "50%",
             background: "linear-gradient(135deg, #7B2D8B, #5a1068)",
@@ -106,79 +128,111 @@ export default function Home() {
             margin: "0 auto 1rem", fontSize: "2rem",
             boxShadow: "0 8px 24px rgba(123,45,139,0.35)"
           }}>🧭</div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#2a0a30", marginBottom: "0.3rem" }}>
-            Campus Navigator
-          </h1>
-          <p style={{ color: "#7B2D8B", fontSize: "0.85rem" }}>
-            AI-powered AR campus navigation
-          </p>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#2a0a30", marginBottom: "0.3rem" }}>Campus Navigator</h1>
+          <p style={{ color: "#7B2D8B", fontSize: "0.85rem" }}>AI-powered AR campus navigation</p>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        {/* Tabs */}
+        <div style={{ display: "flex", background: "#f0e6f5", borderRadius: 10, padding: "0.3rem", marginBottom: "1.5rem" }}>
+          {["login", "register"].map((t) => (
+            <button key={t} type="button" onClick={() => { setTab(t); setError(""); }} style={{
+              flex: 1, padding: "0.55rem",
+              background: tab === t ? "linear-gradient(135deg, #7B2D8B, #5a1068)" : "transparent",
+              border: "none", borderRadius: 8,
+              color: tab === t ? "#fdf6ec" : "#7B2D8B",
+              fontWeight: 600, fontSize: "0.88rem",
+              cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.2s",
+            }}>{t === "login" ? "Login" : "Register"}</button>
+          ))}
+        </div>
 
-          <div className="form-group">
-            <label>Username</label>
-            <input className="input" name="username" type="text"
-              placeholder="Your full name"
-              value={form.username} onChange={(e) => setForm({ ...form, [e.target.name]: e.target.value })} required />
-          </div>
-
-          <div className="form-group">
-            <label>Email</label>
-            <input className="input" name="email" type="email"
-              placeholder="you@university.edu"
-              value={form.email} onChange={(e) => setForm({ ...form, [e.target.name]: e.target.value })} required />
-          </div>
-
-          {/* Student toggle */}
-          <div style={{
-            background: "#f5f0fa", borderRadius: 12, padding: "0.9rem 1rem",
-            border: "1.5px solid #e8d5f0",
-            display: "flex", alignItems: "center", justifyContent: "space-between"
-          }}>
-            <span style={{ fontSize: "0.9rem", fontWeight: 600, color: "#1a0f3d" }}>
-              Are you a student?
-            </span>
-            <div style={{ display: "flex", gap: "0.4rem" }}>
-              {["Yes", "No"].map((opt) => {
-                const active = opt === "Yes" ? form.is_student : !form.is_student;
-                return (
-                  <button key={opt} type="button"
-                    onClick={() => setForm({ ...form, is_student: opt === "Yes", faculty: "" })}
-                    style={{
-                      padding: "0.35rem 1.1rem", borderRadius: 20, border: "none",
-                      fontWeight: 600, fontSize: "0.82rem", cursor: "pointer",
-                      background: active ? "linear-gradient(135deg, #7B2D8B, #5a1068)" : "#e8d5f0",
-                      color: active ? "#fdf6ec" : "#7B2D8B",
-                      fontFamily: "Inter, sans-serif", transition: "all 0.2s"
-                    }}>{opt}</button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Faculty dropdown */}
-          {form.is_student && (
+        {/* Login Form */}
+        {tab === "login" && (
+          <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             <div className="form-group">
-              <label>Select Faculty</label>
-              <select className="select" name="faculty" value={form.faculty} onChange={(e) => setForm({ ...form, faculty: e.target.value })} required>
-                <option value="">Choose your faculty...</option>
-                {FACULTIES.map((f) => <option key={f} value={f}>{f}</option>)}
-              </select>
+              <label>Email</label>
+              <input className="input" type="email" placeholder="you@university.edu"
+                value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} required />
             </div>
-          )}
+            {error && <div className="alert alert-error">{error}</div>}
+            <button className="btn btn-primary btn-full" type="submit" disabled={loading}
+              style={{ padding: "0.9rem", fontSize: "0.95rem" }}>
+              {loading ? "Checking..." : "Login →"}
+            </button>
+            <p style={{ textAlign: "center", fontSize: "0.82rem", color: "#7B2D8B", marginTop: "0.25rem" }}>
+              New here?{" "}
+              <span onClick={() => { setTab("register"); setError(""); }}
+                style={{ fontWeight: 700, cursor: "pointer", textDecoration: "underline" }}>
+                Register
+              </span>
+            </p>
+          </form>
+        )}
 
-          {error && (
-            <div className="alert alert-error">{error}</div>
-          )}
+        {/* Register Form */}
+        {tab === "register" && (
+          <form onSubmit={handleRegister} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div className="form-group">
+              <label>Username</label>
+              <input className="input" name="username" type="text" placeholder="Your full name"
+                value={form.username} onChange={(e) => setForm({ ...form, [e.target.name]: e.target.value })} required />
+            </div>
+            <div className="form-group">
+              <label>Email</label>
+              <input className="input" name="email" type="email" placeholder="you@university.edu"
+                value={form.email} onChange={(e) => setForm({ ...form, [e.target.name]: e.target.value })} required />
+            </div>
 
-          <button className="btn btn-primary btn-full" type="submit" disabled={loading}
-            style={{ padding: "0.9rem", fontSize: "0.95rem", marginTop: "0.25rem" }}>
-            {loading ? "Saving..." : "Register"}
-          </button>
+            <div style={{
+              background: "#f5f0fa", borderRadius: 12, padding: "0.9rem 1rem",
+              border: "1.5px solid #e8d5f0",
+              display: "flex", alignItems: "center", justifyContent: "space-between"
+            }}>
+              <span style={{ fontSize: "0.9rem", fontWeight: 600, color: "#1a0f3d" }}>Are you a student?</span>
+              <div style={{ display: "flex", gap: "0.4rem" }}>
+                {["Yes", "No"].map((opt) => {
+                  const active = opt === "Yes" ? form.is_student : !form.is_student;
+                  return (
+                    <button key={opt} type="button"
+                      onClick={() => setForm({ ...form, is_student: opt === "Yes", faculty: "" })}
+                      style={{
+                        padding: "0.35rem 1.1rem", borderRadius: 20, border: "none",
+                        fontWeight: 600, fontSize: "0.82rem", cursor: "pointer",
+                        background: active ? "linear-gradient(135deg, #7B2D8B, #5a1068)" : "#e8d5f0",
+                        color: active ? "#fdf6ec" : "#7B2D8B",
+                        fontFamily: "Inter, sans-serif", transition: "all 0.2s"
+                      }}>{opt}</button>
+                  );
+                })}
+              </div>
+            </div>
 
-        </form>
+            {form.is_student && (
+              <div className="form-group">
+                <label>Select Faculty</label>
+                <select className="select" name="faculty" value={form.faculty}
+                  onChange={(e) => setForm({ ...form, faculty: e.target.value })} required>
+                  <option value="">Choose your faculty...</option>
+                  {FACULTIES.map((f) => <option key={f} value={f}>{f}</option>)}
+                </select>
+              </div>
+            )}
+
+            {error && <div className="alert alert-error">{error}</div>}
+
+            <button className="btn btn-primary btn-full" type="submit" disabled={loading}
+              style={{ padding: "0.9rem", fontSize: "0.95rem" }}>
+              {loading ? "Saving..." : "Register"}
+            </button>
+            <p style={{ textAlign: "center", fontSize: "0.82rem", color: "#7B2D8B", marginTop: "0.25rem" }}>
+              Already registered?{" "}
+              <span onClick={() => { setTab("login"); setError(""); }}
+                style={{ fontWeight: 700, cursor: "pointer", textDecoration: "underline" }}>
+                Login
+              </span>
+            </p>
+          </form>
+        )}
       </div>
     </div>
   );
