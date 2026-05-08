@@ -51,7 +51,7 @@ export default function Home() {
   };
 
   return (
-    <div className="page-center">
+    <div className="page-center" style={{ backgroundImage: "url('/dee.jpeg')", backgroundSize: "cover", backgroundPosition: "center", backgroundRepeat: "no-repeat" }}>
 
       {/* ── Popup ── */}
       {showPopup && (
