@@ -95,7 +95,7 @@ export default function Home() {
       )}
 
       {/* ── Register Card ── */}
-      <div className="card" style={{ width: "100%", maxWidth: 440 }}>
+      <div className="card" style={{ width: "100%", maxWidth: 440, background: "rgba(253,246,236,0.85)", backdropFilter: "blur(12px)" }}>
 
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: "2rem" }}>
