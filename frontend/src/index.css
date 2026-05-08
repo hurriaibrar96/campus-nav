@@ -33,6 +33,11 @@ body {
   color: var(--text-dark);
 }
 
+/* Home page background override */
+.home-bg {
+  background: none !important;
+}
+
 /* ── Card ── */
 .card {
   background: var(--cream);

@@ -27,6 +27,12 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
 
+  // Remove body background so image shows through
+  useEffect(() => {
+    document.body.classList.add("home-bg");
+    return () => document.body.classList.remove("home-bg");
+  }, []);
+
   // If user already registered before, skip registration and go straight to portal
   useEffect(() => {
     const registered = localStorage.getItem("campus_registered");
@@ -51,7 +57,7 @@ export default function Home() {
   };
 
   return (
-    <div className="page-center" style={{ backgroundImage: "url('/dee.jpeg')", backgroundSize: "cover", backgroundPosition: "center", backgroundRepeat: "no-repeat" }}>
+    <div className="page-center" style={{ backgroundImage: "url('/dee.jpeg')", backgroundSize: "cover", backgroundPosition: "center", backgroundRepeat: "no-repeat", minHeight: "100vh", position: "relative" }}>
 
       {/* ── Popup ── */}
       {showPopup && (
