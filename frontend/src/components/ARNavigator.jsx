@@ -32,7 +32,32 @@ export default function ARNavigator({ path, locations, onExit }) {
     const to     = getNode(toId);
     // Use direction from JSON neighbors if available, else fallback to coordinate calculation
     const jsonDir   = from?.neighbors?.[toId]?.direction ?? "";
-    const dirMap    = { "STRAIGHT": "up", "FRONT": "up", "BACK": "down", "BEHIND": "down", "LEFT": "left", "RIGHT": "right" };
+    const dirMap = {
+  "STRAIGHT": "up",
+  "FRONT": "up",
+  "BACK": "down",
+  "BEHIND": "down",
+  "LEFT": "left",
+  "RIGHT": "right",
+  "ACUTE RIGHT": "right",
+  "OBTUSE RIGHT": "right",
+  "FAR RIGHT": "right",
+  "VERY RIGHT": "right",
+  "RIGHT FRONT": "right",
+  "RIGHT STRAIGHT": "right",
+  "SLIGHT RIGHT": "right",
+  "ACUTE LEFT": "left",
+  "OBTUSE LEFT": "left",
+  "FAR LEFT": "left",
+  "VERY LEFT": "left",
+  "LEFT STRAIGHT": "left",
+  "LEFT FRONT": "left",
+  "FAR RIGHT STRAIGHT": "right",
+  "CROSS": "up",
+  "CROSS LEFT": "left",
+  "CROSS RIGHT": "right",
+  "STRAIGHT BACK": "down",
+};
     const mappedDir = dirMap[jsonDir] ?? null;
     const dir       = mappedDir ?? (from && to ? getDirection(from, to) : "up");
     return {
