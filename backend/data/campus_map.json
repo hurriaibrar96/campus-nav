@@ -30,7 +30,7 @@
       "emergency_exit": { "distance": 1, "direction": "BACK" },
       "back_stairs": { "distance": 1, "direction": "LEFT" },
       "stairs_1": { "distance": 1, "direction": "RIGHT" },
-      "computer_lab": { "distance": 1, "direction": "LEFT" },
+      "computer_lab": { "distance": 1, "direction": "RIGHT" },
       "g1": { "distance": 1, "direction": "STRAIGHT" }
     }
   },
@@ -69,7 +69,7 @@
     "label": "Computer Lab 1",
     "x": 5, "y": 3,
     "neighbors": {
-      "boys_washroom": { "distance": 1, "direction": "RIGHT" },
+      "boys_washroom": { "distance": 1, "direction": "LEFT" },
       "sitting_area1": { "distance": 1, "direction": "FRONT" },
       "library_gate1": { "distance": 1, "direction": "STRAIGHT" },
       "g1": { "distance": 1, "direction": "STRAIGHT" },
@@ -90,7 +90,7 @@
     "neighbors": {
       "computer_lab": { "distance": 1, "direction": "BACK" },
       "class_g2": { "distance": 1, "direction": "RIGHT" },
-      "g2": { "distance": 1, "direction": "FAR RIGHT" },
+      "g2": { "distance": 1, "direction": "LEFT" },
       "g3": { "distance": 1, "direction": "STRAIGHT" },
       "sitting_area2": { "distance": 1, "direction": "STRAIGHT" },
       "main_building": { "distance": 1, "direction": "LEFT" },
@@ -124,7 +124,7 @@
     "label": "G2 (Open Air)",
     "x": 13, "y": 4.5,
     "neighbors": {
-      "library_gate1": { "distance": 1, "direction": "LEFT" },
+      "library_gate1": { "distance": 1, "direction": "RIGHT" },
       "stairs_2": { "distance": 1, "direction": "RIGHT" }
     }
   },
