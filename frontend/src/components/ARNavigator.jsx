@@ -36,7 +36,7 @@ export default function ARNavigator({ path, locations, onExit }) {
   const startLabel = getNode(path[0])?.label ?? path[0];
   const endLabel   = getNode(path[path.length - 1])?.label ?? path[path.length - 1];
 
-  const steps = path.slice(0, -1).map((id, i) => {
+  const allSteps = path.slice(0, -1).map((id, i) => {
     const toId      = path[i + 1];
     const from      = getNode(id);
     const to        = getNode(toId);
@@ -44,14 +44,26 @@ export default function ARNavigator({ path, locations, onExit }) {
     const mappedDir = dirMap[jsonDir] ?? null;
     const dir       = mappedDir ?? (from && to ? getDirection(from, to) : "up");
     const isFinal   = i === path.length - 2;
-
-    // Only show destination name on the final step
-    const instruction = isFinal
-      ? `${LABEL[dir]} → ${endLabel}`
-      : LABEL[dir];
-
-    return { fromId: id, toId, direction: dir, instruction, isFinal };
+    return { fromId: id, toId, direction: dir, isFinal };
   });
+
+  const collapsed = allSteps.reduce((acc, s) => {
+    const prev = acc[acc.length - 1];
+    if (prev && prev.direction === s.direction) {
+      acc[acc.length - 1].toId    = s.toId;
+      acc[acc.length - 1].isFinal = s.isFinal;
+    } else {
+      acc.push({ ...s });
+    }
+    return acc;
+  }, []);
+
+  const steps = collapsed.map((s) => ({
+    ...s,
+    instruction: s.isFinal
+      ? `${LABEL[s.direction]} → ${endLabel}`
+      : LABEL[s.direction],
+  }));
 
   const current  = steps[step];
   const progress = steps.length > 0 ? ((step + 1) / steps.length) * 100 : 100;

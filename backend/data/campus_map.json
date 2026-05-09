@@ -11,7 +11,8 @@
     "x": 2, "y": 1.5,
     "neighbors": {
       "entrance": { "distance": 1, "direction": "BACK" },
-      "emergency_exit": { "distance": 1, "direction": "STRAIGHT" }
+      "emergency_exit": { "distance": 1, "direction": "STRAIGHT" },
+      "computer_lab": { "distance": 3, "direction": "STRAIGHT" }
     }
   },
   "emergency_exit": {
@@ -40,14 +41,14 @@
       "boys_washroom": { "distance": 1, "direction": "RIGHT" }
     }
   },
- "stairs_1": {
-  "label": "Stairs 1 (to 1st Floor)",
-  "x": 3.5, "y": 5,
-  "neighbors": {
-    "boys_washroom": { "distance": 1, "direction": "STRAIGHT" },
-    "stage": { "distance": 1, "direction": "STRAIGHT" }
-  }
-},
+  "stairs_1": {
+    "label": "Stairs 1 (to 1st Floor)",
+    "x": 3.5, "y": 5,
+    "neighbors": {
+      "boys_washroom": { "distance": 1, "direction": "STRAIGHT" },
+      "stage": { "distance": 1, "direction": "STRAIGHT" }
+    }
+  },
   "stage": {
     "label": "Stage (Main Building)",
     "x": 5.5, "y": 5,
@@ -71,7 +72,8 @@
       "boys_washroom": { "distance": 1, "direction": "RIGHT" },
       "sitting_area1": { "distance": 1, "direction": "FRONT" },
       "library_gate1": { "distance": 1, "direction": "STRAIGHT" },
-      "g1": { "distance": 1, "direction": "STRAIGHT" }
+      "g1": { "distance": 1, "direction": "STRAIGHT" },
+      "carbs_dept": { "distance": 3, "direction": "STRAIGHT" }
     }
   },
   "sitting_area1": {
@@ -130,7 +132,7 @@
     "label": "Stairs 2 (to 1st Floor)",
     "x": 13, "y": 5.5,
     "neighbors": {
-      "g2": { "distance": 1, "direction": "BACK" },
+      "g2": { "distance": 1, "direction": "LEFT" },
       "g3": { "distance": 1, "direction": "STRAIGHT" },
       "g4": { "distance": 1, "direction": "STRAIGHT" },
       "sitting_area2": { "distance": 1, "direction": "FRONT" },
