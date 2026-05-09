@@ -12,7 +12,7 @@
     "neighbors": {
       "entrance": { "distance": 1, "direction": "BACK" },
       "emergency_exit": { "distance": 1, "direction": "STRAIGHT" },
-      "corridor": { "distance": 1, "direction": "STRAIGHT" }
+      "boys_washroom": { "distance": 1, "direction": "STRAIGHT" }
     }
   },
   "emergency_exit": {
@@ -23,19 +23,11 @@
       "boys_washroom": { "distance": 1, "direction": "STRAIGHT" }
     }
   },
-  "corridor": {
-    "label": "Corridor (indirect path)",
-    "x": 3, "y": 2.5,
-    "neighbors": {
-      "carbs_dept": { "distance": 1, "direction": "BACK" },
-      "boys_washroom": { "distance": 1, "direction": "STRAIGHT" }
-    }
-  },
   "boys_washroom": {
     "label": "Boys Washroom",
     "x": 4, "y": 3,
     "neighbors": {
-      "corridor": { "distance": 1, "direction": "BACK" },
+      "carbs_dept": { "distance": 1, "direction": "BACK" },
       "emergency_exit": { "distance": 1, "direction": "BACK" },
       "back_stairs": { "distance": 1, "direction": "LEFT" },
       "stairs_1": { "distance": 1, "direction": "RIGHT" },
@@ -97,7 +89,7 @@
     "x": 11, "y": 5.5,
     "neighbors": {
       "computer_lab": { "distance": 1, "direction": "BACK" },
-      "gate2": { "distance": 1, "direction": "RIGHT" },
+      "g2_class": { "distance": 1, "direction": "RIGHT" },
       "g2": { "distance": 1, "direction": "FAR RIGHT" },
       "g3": { "distance": 1, "direction": "STRAIGHT" },
       "sitting_area2": { "distance": 1, "direction": "STRAIGHT" },
@@ -121,8 +113,8 @@
       "stairs_2": { "distance": 1, "direction": "LEFT" }
     }
   },
-  "gate2": {
-    "label": "Gate 2 (Open Air)",
+  "g2_class": {
+    "label": "G2 Class (Open Air)",
     "x": 12, "y": 4,
     "neighbors": {
       "library_gate1": { "distance": 1, "direction": "LEFT" }
@@ -142,11 +134,11 @@
     "neighbors": {
       "g2": { "distance": 1, "direction": "BACK" },
       "g3": { "distance": 1, "direction": "STRAIGHT" },
-      "g4": { "distance": 1, "direction": "STRAIGHT" },
+      "g4": { "distance": 1, "direction": "RIGHT" },
       "sitting_area2": { "distance": 1, "direction": "FRONT" },
       "meelan_exit": { "distance": 1, "direction": "VERY RIGHT" },
       "library_gate1": { "distance": 1, "direction": "OBTUSE LEFT" },
-      "aerolab": { "distance": 1, "direction": "ACUTE RIGHT" }
+      "aerolab": { "distance": 1, "direction": "RIGHT STRAIGHT" }
     }
   },
   "g3": {
