@@ -91,7 +91,6 @@
     "x": 11, "y": 5.5,
     "neighbors": {
       "computer_lab": { "distance": 1, "direction": "BACK" },
-      "class_g2": { "distance": 1, "direction": "RIGHT" },
       "g2": { "distance": 1, "direction": "LEFT" },
       "g3": { "distance": 1, "direction": "STRAIGHT" },
       "sitting_area2": { "distance": 1, "direction": "STRAIGHT" },
@@ -113,13 +112,6 @@
     "neighbors": {
       "library_gate1": { "distance": 1, "direction": "BACK" },
       "stairs_2": { "distance": 1, "direction": "LEFT" }
-    }
-  },
-  "class_g2": {
-    "label": "Class G2 (Open Air)",
-    "x": 12, "y": 4,
-    "neighbors": {
-      "library_gate1": { "distance": 1, "direction": "LEFT" }
     }
   },
   "g2": {
@@ -165,7 +157,7 @@
     }
   },
   "medan": {
-    "label": "Me (Towards Medan)",
+    "label": "Me (Towards Melan)",
     "x": 16, "y": 7,
     "neighbors": {
       "sitting_area2": { "distance": 1, "direction": "LEFT" }

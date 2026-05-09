@@ -166,7 +166,7 @@ export default function Portal() {
                     transition: "border-color 0.2s",
                   }}>
                     <option value="">Choose a location...</option>
-                    {locations.filter((l) => l.id !== scannedLocation).map((l) => (
+                    {locations.filter((l) => l.id !== scannedLocation && l.id !== 'stairs_3').map((l) => (
                       <option key={l.id} value={l.id}>{l.label}</option>
                     ))}
                   </select>
