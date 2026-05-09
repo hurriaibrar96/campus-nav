@@ -40,14 +40,14 @@
       "boys_washroom": { "distance": 1, "direction": "RIGHT" }
     }
   },
-  "stairs_1": {
-    "label": "Stairs 1 (to 1st Floor)",
-    "x": 3.5, "y": 5,
-    "neighbors": {
-      "boys_washroom": { "distance": 1, "direction": "LEFT" },
-      "stage": { "distance": 1, "direction": "STRAIGHT" }
-    }
-  },
+ "stairs_1": {
+  "label": "Stairs 1 (to 1st Floor)",
+  "x": 3.5, "y": 5,
+  "neighbors": {
+    "boys_washroom": { "distance": 1, "direction": "STRAIGHT" },
+    "stage": { "distance": 1, "direction": "STRAIGHT" }
+  }
+},
   "stage": {
     "label": "Stage (Main Building)",
     "x": 5.5, "y": 5,
