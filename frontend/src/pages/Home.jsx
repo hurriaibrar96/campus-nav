@@ -36,13 +36,6 @@ export default function Home() {
     return () => document.body.classList.remove("home-bg");
   }, []);
 
-  useEffect(() => {
-    const registered = localStorage.getItem("campus_registered");
-    if (registered && location) {
-      navigate(`/portal?location=${location}`, { replace: true });
-    }
-  }, []);
-
   const handleLogin = async (e) => {
     e.preventDefault();
     setError(""); setLoading(true);
