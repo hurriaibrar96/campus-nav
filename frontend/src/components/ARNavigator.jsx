@@ -66,7 +66,7 @@ export default function ARNavigator({ path, locations, onExit }) {
       toId,
       toLabel:   to?.label ?? toId,
       direction: dir,
-      instruction: `${LABEL[dir]} → ${to?.label ?? toId}`,
+      instruction: `${LABEL[dir]} → ${getNode(path[path.length - 1])?.label ?? path[path.length - 1]}`,
     };
   });
 
@@ -349,11 +349,6 @@ export default function ARNavigator({ path, locations, onExit }) {
             {/* Instruction */}
             <div style={{ fontSize: 14, fontWeight: "bold", marginBottom: 4 }}>
               {current?.instruction}
-            </div>
-
-            {/* From → To */}
-            <div style={{ fontSize: 11, opacity: 0.75, marginBottom: 2 }}>
-              🚩 {current?.fromLabel} → 📍 {current?.toLabel}
             </div>
 
             {/* Step counter */}
