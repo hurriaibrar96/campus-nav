@@ -127,17 +127,14 @@
     "label": "Stairs 2 (to 1st Floor)",
     "x": 13, "y": 5.5,
     "neighbors": {
-      "g2": { "distance": 1, "direction": "LEFT" },
+      "g2": { "distance": 1, "direction": "RIGHT" },
       "g3": { "distance": 3, "direction": "LEFT" },
       "g4": { "distance": 2, "direction": "STRAIGHT" },
       "sitting_area2": { "distance": 2, "direction": "STRAIGHT" },
       "meelan_exit": { "distance": 1, "direction": "LEFT" },
       "library_gate1": { "distance": 2, "direction": "BACK" },
       "aerolab": { "distance": 2, "direction": "STRAIGHT" },
-      "ahs_corridor": { "distance": 2, "direction": "STRAIGHT" }
-    }
-  },
-  "g3": {
+      "ahs_corridor": { "distance": 2, "direction": "STRAIGHT" } {
     "label": "G3 (Straight)",
     "x": 14, "y": 5.5,
     "neighbors": {
