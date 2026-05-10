@@ -1,15 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import CameraHandler from "./CameraHandler";
 
-function getDirection(from, to) {
-  const dx = to.x - from.x;
-  const dy = to.y - from.y;
-  if (Math.abs(dx) > Math.abs(dy)) {
-    return dx > 0 ? "up" : "down";
-  }
-  return dy > 0 ? "left" : "right";
-}
-
 const LABEL = { up: "⬆ Go Forward", down: "⬇ Go Back", left: "⬅ Turn Left", right: "➡ Turn Right" };
 
 const dirMap = {
@@ -42,7 +33,7 @@ export default function ARNavigator({ path, locations, onExit }) {
     const to        = getNode(toId);
     const jsonDir   = from?.neighbors?.[toId]?.direction ?? "";
     const mappedDir = dirMap[jsonDir] ?? null;
-    const dir       = mappedDir ?? (from && to ? getDirection(from, to) : "up");
+    const dir       = mappedDir ?? "up";
     const isFinal   = i === path.length - 2;
     return { fromId: id, toId, direction: dir, isFinal };
   });
