@@ -127,7 +127,7 @@
     "label": "Stairs 2 (to 1st Floor)",
     "x": 13, "y": 5.5,
     "neighbors": {
-      "g2": { "distance": 1, "direction": "RIGHT" },
+      "g2": { "distance": 1, "direction": "LEFT" },
       "g3": { "distance": 1, "direction": "LEFT" },
       "g4": { "distance": 2, "direction": "STRAIGHT" },
       "sitting_area2": { "distance": 2, "direction": "STRAIGHT" },
@@ -171,7 +171,7 @@
       "sitting_area2": { "distance": 1, "direction": "STRAIGHT" },
       "aerolab": { "distance": 1, "direction": "STRAIGHT" },
       "girls_washroom": { "distance": 1, "direction": "RIGHT" },
-      "ahs_corridor": { "distance": 1, "direction": "BACK" },
+      "corridor_junction": { "distance": 1, "direction": "BACK" },
       "stairs_2": { "distance": 2, "direction": "BACK" }
     }
   },
@@ -242,7 +242,7 @@
     "label": "AHS Faculty (Large Room, Left Side)",
     "x": 13, "y": 14,
     "neighbors": {
-      "ahs_corridor": { "distance": 1, "direction": "STRAIGHT" },
+      "ahs_corridor": { "distance": 1, "direction": "RIGHT" },
       "student_counter": { "distance": 1, "direction": "STRAIGHT" }
     }
   },
@@ -251,12 +251,20 @@
     "x": 14, "y": 12,
     "neighbors": {
       "ahs_faculty": { "distance": 1, "direction": "BACK" },
-      "aerolab": { "distance": 1, "direction": "RIGHT" },
-      "g4": { "distance": 1, "direction": "STRAIGHT" },
-      "girls_washroom": { "distance": 1, "direction": "LEFT" },
-      "aircraft_showroom": { "distance": 1, "direction": "RIGHT" },
+      "aerolab": { "distance": 1, "direction": "STRAIGHT" },
+      "corridor_junction": { "distance": 1, "direction": "STRAIGHT" },
+      "aircraft_showroom": { "distance": 1, "direction": "STRAIGHT" },
       "stairs_2": { "distance": 2, "direction": "STRAIGHT" },
       "library_gate1": { "distance": 2, "direction": "STRAIGHT" }
+    }
+  },
+  "corridor_junction": {
+    "label": "AHS Corridor Junction",
+    "x": 14, "y": 10,
+    "neighbors": {
+      "ahs_corridor": { "distance": 1, "direction": "BACK" },
+      "g4": { "distance": 1, "direction": "RIGHT" },
+      "girls_washroom": { "distance": 1, "direction": "RIGHT" }
     }
   },
   "girls_washroom": {
@@ -266,7 +274,7 @@
       "ahs_faculty": { "distance": 1, "direction": "RIGHT" },
       "aerolab2": { "distance": 1, "direction": "RIGHT" },
       "g4": { "distance": 1, "direction": "BACK" },
-      "ahs_corridor": { "distance": 1, "direction": "RIGHT" }
+      "corridor_junction": { "distance": 1, "direction": "BACK" }
     }
   }
 }
