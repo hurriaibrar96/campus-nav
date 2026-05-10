@@ -241,26 +241,12 @@
     "label": "AHS Faculty (Large Room, Left Side)",
     "x": 13, "y": 14,
     "neighbors": {
-      "bookshop_exit":    { "distance": 1, "direction": "STRAIGHT" },
-      "aerolab":          { "distance": 2, "direction": "RIGHT", "then": "STRAIGHT" },
-      "aircraft_showroom":{ "distance": 3, "direction": "RIGHT", "then": "STRAIGHT, SLIGHT RIGHT" },
-      "g4":               { "distance": 3, "direction": "RIGHT", "then": "STRAIGHT, RIGHT" },
-      "girls_washroom":   { "distance": 3, "direction": "RIGHT", "then": "STRAIGHT, LEFT" },
-      "stairs_2":         { "distance": 3, "direction": "RIGHT", "then": "STRAIGHT, ACUTE RIGHT" },
-      "meelan_exit":      { "distance": 3, "direction": "RIGHT", "then": "STRAIGHT, LEFT" },
-      "sitting_area2":    { "distance": 3, "direction": "RIGHT", "then": "STRAIGHT, STRAIGHT" },
-      "g3":               { "distance": 3, "direction": "RIGHT", "then": "STRAIGHT, STRAIGHT" },
-      "g2":               { "distance": 4, "direction": "RIGHT", "then": "STRAIGHT, ACUTE RIGHT, STRAIGHT, VERY RIGHT, LEFT" },
-      "library_gate1":    { "distance": 3, "direction": "RIGHT", "then": "STRAIGHT" },
-      "computer_lab":     { "distance": 4, "direction": "RIGHT", "then": "STRAIGHT, STRAIGHT" },
-      "sitting_area1":    { "distance": 4, "direction": "RIGHT", "then": "STRAIGHT, STRAIGHT" },
-      "stairs_1":         { "distance": 4, "direction": "RIGHT", "then": "STRAIGHT, STRAIGHT, LEFT" },
-      "g1":               { "distance": 4, "direction": "RIGHT", "then": "STRAIGHT, STRAIGHT, RIGHT" },
-      "boys_washroom":    { "distance": 4, "direction": "RIGHT", "then": "STRAIGHT, STRAIGHT, RIGHT, STRAIGHT" },
-      "carbs_dept":       { "distance": 5, "direction": "RIGHT", "then": "STRAIGHT, STRAIGHT, STRAIGHT" },
-      "entrance":         { "distance": 5, "direction": "RIGHT", "then": "STRAIGHT, STRAIGHT, STRAIGHT, STRAIGHT" },
+      "aerolab":          { "distance": 1, "direction": "RIGHT" },
       "aerolab2":         { "distance": 1, "direction": "CROSS" },
-      "stairs_3":         { "distance": 2, "direction": "RIGHT", "then": "STRAIGHT, RIGHT" }
+      "aircraft_showroom":{ "distance": 1, "direction": "CROSS RIGHT" },
+      "g4":               { "distance": 1, "direction": "STRAIGHT" },
+      "bookshop_exit":    { "distance": 1, "direction": "STRAIGHT" },
+      "stairs_2":         { "distance": 1, "direction": "STRAIGHT" }
     }
   },
   "girls_washroom": {
