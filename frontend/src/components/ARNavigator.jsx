@@ -329,9 +329,9 @@ export default function ARNavigator({ path, locations, onExit }) {
 
       {/* Full route list — visible when scrolling down */}
       <div style={{
-        width: "100%", background: "#ffffff",
+        width: "100%", background: "#f5eef8",
         padding: "16px", boxSizing: "border-box",
-        fontFamily: "Inter, sans-serif", color: "white",
+        fontFamily: "Inter, sans-serif", color: "#1a0f3d",
         borderTop: "1px solid rgba(124,92,191,0.3)",
       }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: "#fdf6ec", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Full Route</div>
