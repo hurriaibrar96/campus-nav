@@ -128,8 +128,8 @@
     "label": "Stairs 2 (to 1st Floor)",
     "x": 13, "y": 5.5,
     "neighbors": {
-      "g2": { "distance": 1, "direction": "RIGHT" },
-      "g3": { "distance": 3, "direction": "LEFT" },
+      "g2": { "distance": 5, "direction": "RIGHT" },
+      "g3": { "distance": 3, "direction": "RIGHT" },
       "g4": { "distance": 2, "direction": "STRAIGHT" },
       "sitting_area2": { "distance": 2, "direction": "STRAIGHT" },
       "meelan_exit": { "distance": 1, "direction": "LEFT" },
@@ -144,7 +144,8 @@
     "neighbors": {
       "library_gate1": { "distance": 1, "direction": "BACK" },
       "sitting_area2": { "distance": 1, "direction": "STRAIGHT" },
-      "stairs_2": { "distance": 1, "direction": "RIGHT" }
+      "stairs_2": { "distance": 1, "direction": "RIGHT" },
+      "g2": { "distance": 1, "direction": "RIGHT" }
     }
   },
   "sitting_area2": {
