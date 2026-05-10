@@ -1,12 +1,14 @@
 const SCALE  = 95;
 const OFFSET = { x: 160, y: 120 };
 
-const AR_ANCHORS = new Set(["entrance","library","computer_lab","aerolab","ahs_faculty","stairs_1","stairs_2","stairs_3"]);
+const HIDDEN_NODES = new Set([
+  "corridor_junction", "main_corridor_junction", "library_junction",
+  "g2_junction", "medan", "back_stairs", "emergency_exit", "stage", "main_building"
+]);
 
 const HALLWAY_SPINE = [
-  "entrance","carbs_dept","boys_washroom","emergency_exit",
-  "sitting_area1","computer_lab","library","g3",
-  "sitting_area2","medan"
+  "entrance", "carbs_dept", "computer_lab", "library_gate1",
+  "g3", "sitting_area2", "g4", "aerolab", "ahs_corridor", "ahs_faculty"
 ];
 
 function drawGrid(ctx, w, h) {
@@ -25,6 +27,20 @@ export function drawFloorMap(canvas, locations, path = [], currentNodeId = "") {
   const W   = canvas.width;
   const H   = canvas.height;
 
+  const PAD = 80;
+  const xs  = locations.map((l) => l.x);
+  const ys  = locations.map((l) => l.y);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  const scaleX = (W - PAD * 2) / (maxX - minX || 1);
+  const scaleY = (H - PAD * 2) / (maxY - minY || 1);
+  const SCALE  = Math.min(scaleX, scaleY);
+  const OFFSET = {
+    x: PAD + ((W - PAD * 2) - (maxX - minX) * SCALE) / 2 - minX * SCALE,
+    y: PAD + ((H - PAD * 2) - (maxY - minY) * SCALE) / 2 - minY * SCALE,
+  };
+  const toC = (x, y) => ({ cx: OFFSET.x + x * SCALE, cy: OFFSET.y + y * SCALE });
+
   // Background
   const bg = ctx.createLinearGradient(0, 0, W, H);
   bg.addColorStop(0, "#0a0a0a");
@@ -37,7 +53,6 @@ export function drawFloorMap(canvas, locations, path = [], currentNodeId = "") {
   const pathSet = new Set(path);
   const destId  = path[path.length - 1] ?? "";
   const locMap  = Object.fromEntries(locations.map((l) => [l.id, l]));
-  const toC     = (x, y) => ({ cx: OFFSET.x + x * SCALE, cy: OFFSET.y + y * SCALE });
 
   // Hallway spine — thick corridor background
   const spine = HALLWAY_SPINE.map((id) => locMap[id]).filter(Boolean);
@@ -63,7 +78,7 @@ export function drawFloorMap(canvas, locations, path = [], currentNodeId = "") {
 
   // All neighbor connections (dim dashed)
   ctx.setLineDash([4, 8]);
-  locations.forEach(({ id, x, y, neighbors }) => {
+  locations.filter(l => !HIDDEN_NODES.has(l.id)).forEach(({ id, x, y, neighbors }) => {
     if (!neighbors) return;
     Object.keys(neighbors).forEach((nid) => {
       const nb = locMap[nid];
@@ -109,14 +124,13 @@ export function drawFloorMap(canvas, locations, path = [], currentNodeId = "") {
   }
 
   // Nodes
-  locations.forEach(({ id, label, x, y }) => {
+  locations.filter(l => !HIDDEN_NODES.has(l.id)).forEach(({ id, label, x, y }) => {
     const { cx, cy } = toC(x, y);
     const isCurrent = id === currentNodeId;
     const isDest    = id === destId && destId !== currentNodeId;
     const isPath    = pathSet.has(id);
-    const isAnchor  = AR_ANCHORS.has(id);
 
-    const r = isCurrent || isDest ? 16 : isAnchor ? 12 : 8;
+    const r = isCurrent || isDest ? 16 : isPath ? 12 : 8;
 
     // Outer glow
     if (isCurrent || isDest || isPath) {
@@ -136,10 +150,8 @@ export function drawFloorMap(canvas, locations, path = [], currentNodeId = "") {
       g.addColorStop(0, "#fca5a5"); g.addColorStop(1, "#e05555");
     } else if (isPath) {
       g.addColorStop(0, "#ffd740"); g.addColorStop(1, "#f5c518");
-    } else if (isAnchor) {
-      g.addColorStop(0, "#2a2a2a"); g.addColorStop(1, "#1a1a1a");
     } else {
-      g.addColorStop(0, "#222222"); g.addColorStop(1, "#111111");
+      g.addColorStop(0, "#2a2a2a"); g.addColorStop(1, "#1a1a1a");
     }
 
     ctx.beginPath();
@@ -152,8 +164,7 @@ export function drawFloorMap(canvas, locations, path = [], currentNodeId = "") {
     ctx.strokeStyle = isCurrent ? "#3dba7e"
                     : isDest    ? "#e05555"
                     : isPath    ? "#f5c518"
-                    : isAnchor  ? "rgba(245,197,24,0.5)"
-                    :             "rgba(245,197,24,0.15)";
+                    :             "rgba(245,197,24,0.3)";
     ctx.lineWidth = isCurrent || isDest ? 2.5 : 1.5;
     ctx.stroke();
 
@@ -162,8 +173,7 @@ export function drawFloorMap(canvas, locations, path = [], currentNodeId = "") {
     ctx.fillStyle    = isCurrent ? "#6ee7b7"
                      : isDest    ? "#fca5a5"
                      : isPath    ? "#f5c518"
-                     : isAnchor  ? "rgba(255,255,255,0.65)"
-                     :             "rgba(255,255,255,0.3)";
+                     :             "rgba(255,255,255,0.5)";
     ctx.textAlign    = "center";
     ctx.textBaseline = "top";
     ctx.shadowColor  = "rgba(0,0,0,0.9)";

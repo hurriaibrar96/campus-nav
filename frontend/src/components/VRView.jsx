@@ -62,7 +62,7 @@ export default function VRView({ locations, path, currentLocation }) {
         <canvas
           ref={canvasRef}
           width={1400}
-          height={900}
+          height={1100}
           style={{ display: "block", width: "100%", height: "auto" }}
         />
       </div>

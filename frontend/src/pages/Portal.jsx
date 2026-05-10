@@ -13,9 +13,9 @@ const MODES = [
 ];
 
 const C = {
-  purple:      "#6C47D9",
-  purpleLight: "#F5F3FF",
-  purpleBorder:"#DDD8FB",
+  purple:      "#7B2D8B",
+  purpleLight: "#f5eef8",
+  purpleBorder:"#e8d5f0",
   textDark:    "#1A1A2E",
   textMuted:   "#6B7280",
   white:       "#FFFFFF",

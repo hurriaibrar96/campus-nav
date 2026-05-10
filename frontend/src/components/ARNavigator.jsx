@@ -198,7 +198,7 @@ export default function ARNavigator({ path, locations, onExit }) {
   if (path.length === 0) return <p style={{ color: "var(--cream)" }}>No route to display.</p>;
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "100vh", overflow: "hidden", background: "#000", display: "flex", flexDirection: "column" }}>
+    <div style={{ position: "relative", width: "100%", minHeight: "100vh", overflowY: "auto", background: "#000", display: "flex", flexDirection: "column" }}>
 
       {/* Camera - 78% height */}
       <div style={{ position: "relative", width: "100%", height: "78vh", flexShrink: 0 }}>
@@ -319,6 +319,34 @@ export default function ARNavigator({ path, locations, onExit }) {
             }}>Done</button>
           </div>
         )}
+      </div>
+
+      {/* Full route list — visible when scrolling down */}
+      <div style={{
+        width: "100%", background: "#0a0a0a",
+        padding: "16px", boxSizing: "border-box",
+        fontFamily: "Inter, sans-serif", color: "white",
+        borderTop: "1px solid rgba(124,92,191,0.3)",
+      }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "#9b7fd4", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Full Route</div>
+        {steps.map((s, i) => (
+          <div key={i} onClick={() => { setStep(i); setArrived(false); }} style={{
+            display: "flex", alignItems: "center", gap: 12,
+            padding: "10px 12px", marginBottom: 6,
+            borderRadius: 10,
+            background: i === step ? "rgba(124,92,191,0.3)" : "rgba(255,255,255,0.05)",
+            border: i === step ? "1px solid rgba(124,92,191,0.6)" : "1px solid transparent",
+            cursor: "pointer",
+          }}>
+            <div style={{
+              width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
+              background: i === step ? "#7c5cbf" : "rgba(124,92,191,0.2)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 12, fontWeight: 700, color: "white",
+            }}>{i + 1}</div>
+            <div style={{ fontSize: 14, fontWeight: i === step ? 700 : 400 }}>{s.instruction}</div>
+          </div>
+        ))}
       </div>
     </div>
   );
