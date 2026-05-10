@@ -97,7 +97,8 @@
       "main_building": { "distance": 1, "direction": "LEFT" },
       "meelan_exit": { "distance": 2, "direction": "RIGHT" },
       "stairs_2": { "distance": 2, "direction": "RIGHT" },
-      "ahs_corridor": { "distance": 2, "direction": "STRAIGHT" }
+      "ahs_corridor": { "distance": 2, "direction": "STRAIGHT" },
+      "main_corridor_junction": { "distance": 1, "direction": "BACK" }
     }
   },
   "main_building": {
@@ -252,7 +253,15 @@
       "corridor_junction": { "distance": 1, "direction": "STRAIGHT" },
       "aircraft_showroom": { "distance": 2, "direction": "STRAIGHT" },
       "stairs_2": { "distance": 2, "direction": "STRAIGHT" },
-      "library_gate1": { "distance": 2, "direction": "STRAIGHT" }
+      "main_corridor_junction": { "distance": 1, "direction": "STRAIGHT" }
+    }
+  },
+  "main_corridor_junction": {
+    "label": "Main Corridor Junction",
+    "x": 14, "y": 8,
+    "neighbors": {
+      "ahs_corridor": { "distance": 1, "direction": "BACK" },
+      "library_gate1": { "distance": 1, "direction": "RIGHT" }
     }
   },
   "corridor_junction": {
