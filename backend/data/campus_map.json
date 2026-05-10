@@ -128,7 +128,7 @@
     "x": 13, "y": 5.5,
     "neighbors": {
       "g2": { "distance": 1, "direction": "LEFT" },
-      "g3": { "distance": 1, "direction": "LEFT" },
+      "g3": { "distance": 3, "direction": "LEFT" },
       "g4": { "distance": 2, "direction": "STRAIGHT" },
       "sitting_area2": { "distance": 2, "direction": "STRAIGHT" },
       "meelan_exit": { "distance": 1, "direction": "LEFT" },
