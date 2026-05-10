@@ -98,7 +98,7 @@
       "meelan_exit": { "distance": 2, "direction": "RIGHT" },
       "stairs_2": { "distance": 2, "direction": "RIGHT" },
       "ahs_corridor": { "distance": 2, "direction": "STRAIGHT" },
-      "main_corridor_junction": { "distance": 1, "direction": "BACK" }
+      "library_junction": { "distance": 1, "direction": "BACK" }
     }
   },
   "main_building": {
@@ -137,7 +137,7 @@
     "label": "Stairs 2 (to 1st Floor)",
     "x": 13, "y": 5.5,
     "neighbors": {
-      "g2": { "distance": 5, "direction": "RIGHT" },
+      "g2": { "distance": 9, "direction": "RIGHT" },
       "g3": { "distance": 3, "direction": "RIGHT" },
       "g4": { "distance": 2, "direction": "STRAIGHT" },
       "sitting_area2": { "distance": 2, "direction": "STRAIGHT" },
@@ -154,7 +154,6 @@
       "library_gate1": { "distance": 1, "direction": "BACK" },
       "sitting_area2": { "distance": 1, "direction": "STRAIGHT" },
       "stairs_2": { "distance": 1, "direction": "RIGHT" },
-      "g2": { "distance": 1, "direction": "RIGHT" },
       "g2_junction": { "distance": 1, "direction": "RIGHT" }
     }
   },
@@ -275,7 +274,15 @@
     "x": 14, "y": 8,
     "neighbors": {
       "ahs_corridor": { "distance": 1, "direction": "BACK" },
-      "library_gate1": { "distance": 1, "direction": "RIGHT" }
+      "library_junction": { "distance": 1, "direction": "RIGHT" }
+    }
+  },
+  "library_junction": {
+    "label": "Library Junction",
+    "x": 12, "y": 8,
+    "neighbors": {
+      "main_corridor_junction": { "distance": 1, "direction": "BACK" },
+      "library_gate1": { "distance": 1, "direction": "STRAIGHT" }
     }
   },
   "corridor_junction": {
