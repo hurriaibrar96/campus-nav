@@ -66,8 +66,9 @@ async def get_response(message: str, session_id: str, current_location: str = ""
         if current_location:
             path = get_path(current_location, dest)
             return _format_path(path) if path else _text(RESP["no_path"])
-        _sessions[session_id] = {"step": "ask_dest", "from": ""}
-        return _text(RESP["ask_dest"])
+        # No QR scanned — ask where they are
+        _sessions[session_id] = {"step": "ask_start", "to": dest}
+        return _text(RESP["ask_start"])
 
     intent = _match_intent(text)
 

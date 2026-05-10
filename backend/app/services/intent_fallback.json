@@ -31,7 +31,7 @@
     "bookshop_exit":     ["bookshop", "book shop", "exit bookshop", "towards bookshop", "bookshop exit"]
   },
   "responses": {
-    "greeting":      "Hi! I'm your SuperiorXR campus guide. Where are you right now, or just tell me where you want to go!",
+    "ask_start":     "Got it! Where are you right now? (e.g. Entrance, Computer Lab, Aerolab)",
     "ask_dest":      "Got it! Where would you like to go?",
     "help":          "I know all locations on this floor: Library, Computer Lab, Aerolab, AHS Faculty, Aircraft Showroom, Avionics Lab, Student Counter, Sitting Areas, Washrooms, Stairs, and more. Try: 'Take me to the Library' or 'Where is Aerolab?'",
     "not_found":     "Sorry, I didn't recognize that location. Try names like: Library, Computer Lab, Aerolab, AHS Faculty, Aircraft Showroom, Avionics Lab, Student Counter, Girls Washroom, Boys Washroom.",
