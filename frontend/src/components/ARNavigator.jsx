@@ -219,7 +219,7 @@ export default function ARNavigator({ path, locations, onExit }) {
           <p style={{ color: "rgba(253,246,236,0.7)", fontSize: "0.85rem", marginBottom: 20 }}>Allow access to device orientation for accurate AR navigation</p>
           <button onClick={requestOrientationPermission} style={{
             width: "100%", padding: "12px",
-            background: "linear-gradient(135deg, #7c5cbf, #4a2c9e)",
+            background: "linear-gradient(135deg, #7B2D8B, #5a1068)",
             border: "none", borderRadius: 12,
             color: "white", fontSize: "0.95rem", fontWeight: "bold", cursor: "pointer",
           }}>Allow Compass Access</button>
@@ -273,7 +273,7 @@ export default function ARNavigator({ path, locations, onExit }) {
           <>
             {/* Progress bar */}
             <div style={{ height: 3, background: "#444", borderRadius: 2, marginBottom: 8, overflow: "hidden" }}>
-              <div style={{ width: `${progress}%`, height: "100%", background: "linear-gradient(90deg, #7c5cbf, #9b59b6)", transition: "width 0.3s" }} />
+              <div style={{ width: `${progress}%`, height: "100%", background: "linear-gradient(90deg, #7B2D8B, #5a1068)", transition: "width 0.3s" }} />
             </div>
 
             {/* Instruction — no intermediate name, only direction. Final step shows destination */}
@@ -298,7 +298,7 @@ export default function ARNavigator({ path, locations, onExit }) {
 
               <button onClick={handleNext} style={{
                 flex: 2, padding: "7px",
-                background: "linear-gradient(135deg, #7c5cbf, #4a2c9e)",
+                background: "linear-gradient(135deg, #7B2D8B, #5a1068)",
                 border: "none", borderRadius: 10,
                 color: "white", fontSize: 13, fontWeight: "bold", cursor: "pointer",
               }}>
@@ -313,7 +313,7 @@ export default function ARNavigator({ path, locations, onExit }) {
             <div style={{ fontSize: 11, opacity: 0.75, marginBottom: 10 }}>{endLabel} reached successfully</div>
             <button onClick={onExit} style={{
               padding: "8px 24px",
-              background: "linear-gradient(135deg, #7c5cbf, #4a2c9e)",
+              background: "linear-gradient(135deg, #7B2D8B, #5a1068)",
               border: "none", borderRadius: 10,
               color: "white", fontSize: 13, fontWeight: "bold", cursor: "pointer",
             }}>Done</button>
