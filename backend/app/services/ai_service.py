@@ -18,6 +18,14 @@ def _match_location(text: str) -> str | None:
             return node_id
     return None
 
+def _match_all_locations(text: str) -> list:
+    text = text.lower()
+    found = []
+    for node_id, aliases in LOCATIONS.items():
+        if any(alias in text for alias in aliases):
+            found.append(node_id)
+    return found
+
 def _match_intent(text: str) -> str | None:
     text = text.lower()
     for intent, phrases in INTENTS.items():
@@ -59,16 +67,18 @@ async def get_response(message: str, session_id: str, current_location: str = ""
         return _format_path(path) if path else _text(RESP["no_path"])
 
     # Always try to find a destination in the message first
-    dest = _match_location(text)
-    if dest:
-        if dest == current_location:
+    matched = _match_all_locations(text)
+    if matched:
+        # If two locations mentioned: first = start, last = dest
+        dest  = matched[-1]
+        start = matched[0] if len(matched) >= 2 else (current_location or "")
+        if not start:
+            _sessions[session_id] = {"step": "ask_start", "to": dest}
+            return _text(RESP["ask_start"])
+        if start == dest:
             return _text(RESP["same_location"])
-        if current_location:
-            path = get_path(current_location, dest)
-            return _format_path(path) if path else _text(RESP["no_path"])
-        # No QR scanned — ask where they are
-        _sessions[session_id] = {"step": "ask_start", "to": dest}
-        return _text(RESP["ask_start"])
+        path = get_path(start, dest)
+        return _format_path(path) if path else _text(RESP["no_path"])
 
     intent = _match_intent(text)
 

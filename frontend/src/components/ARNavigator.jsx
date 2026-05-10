@@ -56,11 +56,19 @@ export default function ARNavigator({ path, locations, onExit }) {
       : LABEL[s.direction],
   }));
 
-  const current  = steps[step];
-  const progress = steps.length > 0 ? ((step + 1) / steps.length) * 100 : 100;
+  const current  = path[step];
+  const currentNode = getNode(path[step]);
+  const nextNode    = getNode(path[step + 1]);
+  const jsonDir     = currentNode?.neighbors?.[path[step + 1]]?.direction ?? "";
+  const mappedDir   = dirMap[jsonDir] ?? "up";
+  const instruction = step === path.length - 1
+    ? `📍 You have arrived at ${endLabel}`
+    : `${LABEL[mappedDir]} → ${nextNode?.label ?? path[step + 1]}`;
+
+  const progress = ((step + 1) / path.length) * 100;
 
   const handleNext = () => {
-    if (step < steps.length - 1) setStep((s) => s + 1);
+    if (step < path.length - 1) setStep((s) => s + 1);
     else setArrived(true);
   };
 
@@ -105,7 +113,7 @@ export default function ARNavigator({ path, locations, onExit }) {
     const ctx   = canvas.getContext("2d");
     const W     = canvas.width;
     const H     = canvas.height;
-    const dir   = current.direction;
+    const dir   = mappedDir;
     const TOTAL = 8;
     let offset  = 0;
     let rafId;
@@ -276,14 +284,12 @@ export default function ARNavigator({ path, locations, onExit }) {
               <div style={{ width: `${progress}%`, height: "100%", background: "linear-gradient(90deg, #7B2D8B, #5a1068)", transition: "width 0.3s" }} />
             </div>
 
-            {/* Instruction — no intermediate name, only direction. Final step shows destination */}
             <div style={{ fontSize: 16, fontWeight: "bold", marginBottom: 6 }}>
-              {current?.instruction}
+              {instruction}
             </div>
 
-            {/* Step counter */}
             <div style={{ fontSize: 10, opacity: 0.5, marginBottom: 8 }}>
-              Step {step + 1} of {steps.length}
+              Step {step + 1} of {path.length}
             </div>
 
             {/* Buttons */}
@@ -302,7 +308,7 @@ export default function ARNavigator({ path, locations, onExit }) {
                 border: "none", borderRadius: 10,
                 color: "white", fontSize: 13, fontWeight: "bold", cursor: "pointer",
               }}>
-                {step === steps.length - 1 ? "✅ Arrive" : "Next ▶"}
+                {step === path.length - 1 ? "✅ Arrive" : "Next ▶"}
               </button>
             </div>
           </>
@@ -329,24 +335,32 @@ export default function ARNavigator({ path, locations, onExit }) {
         borderTop: "1px solid rgba(124,92,191,0.3)",
       }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: "#fdf6ec", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Full Route</div>
-        {steps.map((s, i) => (
-          <div key={i} onClick={() => { setStep(i); setArrived(false); }} style={{
-            display: "flex", alignItems: "center", gap: 12,
-            padding: "10px 12px", marginBottom: 6,
-            borderRadius: 10,
-            background: i === step ? "rgba(124,92,191,0.3)" : "rgba(255,255,255,0.05)",
-            border: i === step ? "1px solid rgba(124,92,191,0.6)" : "1px solid transparent",
-            cursor: "pointer",
-          }}>
-            <div style={{
-              width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
-              background: i === step ? "#7c5cbf" : "rgba(124,92,191,0.2)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 12, fontWeight: 700, color: "white",
-            }}>{i + 1}</div>
-            <div style={{ fontSize: 14, fontWeight: i === step ? 700 : 400 }}>{s.instruction}</div>
-          </div>
-        ))}
+        {path.map((nodeId, i) => {
+          const isFirst = i === 0;
+          const isLast  = i === path.length - 1;
+          const label   = getNode(nodeId)?.label ?? nodeId;
+          return (
+            <div key={nodeId} style={{
+              display: "flex", alignItems: "center", gap: 12,
+              padding: "10px 12px", marginBottom: 6,
+              borderRadius: 10,
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid transparent",
+            }}>
+              <div style={{
+                width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
+                background: isFirst ? "#7B2D8B" : isLast ? "#16A34A" : "rgba(124,92,191,0.2)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 11, fontWeight: 700, color: "white",
+              }}>{isFirst ? "S" : isLast ? "E" : i}</div>
+              <div style={{ fontSize: 14, fontWeight: isFirst || isLast ? 700 : 400 }}>
+                {label}
+                {isFirst && <span style={{ marginLeft: 6, fontSize: 10, background: "rgba(123,45,139,0.4)", padding: "1px 6px", borderRadius: 4 }}>START</span>}
+                {isLast  && <span style={{ marginLeft: 6, fontSize: 10, background: "rgba(22,163,74,0.4)",  padding: "1px 6px", borderRadius: 4 }}>END</span>}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
