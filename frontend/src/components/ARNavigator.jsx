@@ -323,12 +323,12 @@ export default function ARNavigator({ path, locations, onExit }) {
 
       {/* Full route list — visible when scrolling down */}
       <div style={{
-        width: "100%", background: "#0a0a0a",
+        width: "100%", background: "linear-gradient(135deg, #5a1068, #7B2D8B)",
         padding: "16px", boxSizing: "border-box",
         fontFamily: "Inter, sans-serif", color: "white",
         borderTop: "1px solid rgba(124,92,191,0.3)",
       }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: "#9b7fd4", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Full Route</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "#fdf6ec", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Full Route</div>
         {steps.map((s, i) => (
           <div key={i} onClick={() => { setStep(i); setArrived(false); }} style={{
             display: "flex", alignItems: "center", gap: 12,

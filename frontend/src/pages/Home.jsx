@@ -121,7 +121,7 @@ export default function Home() {
             margin: "0 auto 1rem", fontSize: "2rem",
             boxShadow: "0 8px 24px rgba(123,45,139,0.35)"
           }}>🧭</div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#2a0a30", marginBottom: "0.3rem" }}>Campus Navigator</h1>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#2a0a30", marginBottom: "0.3rem" }}>SuperiorXR - Your Campus Navigator</h1>
           <p style={{ color: "#7B2D8B", fontSize: "0.85rem" }}>AI-powered AR campus navigation</p>
         </div>
 

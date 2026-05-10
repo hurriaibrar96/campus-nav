@@ -20,7 +20,7 @@ export default function VRView({ locations, path, currentLocation }) {
         <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
           <div style={{
             width: 38, height: 38, borderRadius: "50%",
-            background: "linear-gradient(135deg, #7c5cbf, #4a2c9e)",
+            background: "#7B2D8B",
             display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.1rem"
           }}>🏛️</div>
           <div>
@@ -54,10 +54,10 @@ export default function VRView({ locations, path, currentLocation }) {
 
       {/* Canvas */}
       <div style={{
-        background: "linear-gradient(160deg, #0f0a1e, #1a1035, #0d1a2e)",
+        background: "#fdf6ec",
         borderRadius: 16, overflow: "hidden",
-        boxShadow: "inset 0 2px 12px rgba(0,0,0,0.4), 0 4px 20px rgba(45,27,105,0.3)",
-        border: "1px solid rgba(124,92,191,0.2)"
+        boxShadow: "0 4px 20px rgba(123,45,139,0.15)",
+        border: "1.5px solid #e8d5f0"
       }}>
         <canvas
           ref={canvasRef}

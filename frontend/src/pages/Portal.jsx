@@ -66,7 +66,7 @@ export default function Portal() {
             display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem",
           }}>🧭</div>
           <div>
-            <div style={{ color: C.white, fontWeight: 700, fontSize: 16, lineHeight: 1.2 }}>Campus Navigator</div>
+            <div style={{ color: C.white, fontWeight: 700, fontSize: 16, lineHeight: 1.2 }}>SuperiorXR - Your Campus Navigator</div>
             <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase" }}>AI · AR · Powered</div>
           </div>
         </div>
@@ -303,14 +303,6 @@ export default function Portal() {
             borderRadius: 16, padding: "20px 16px",
             boxShadow: "0 2px 12px rgba(108,71,217,0.08)",
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-              <div style={{
-                width: 36, height: 36, borderRadius: "50%",
-                background: C.purpleLight, border: `1px solid ${C.purpleBorder}`,
-                display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem",
-              }}>🏛️</div>
-              <span style={{ fontWeight: 700, color: C.textDark, fontSize: 17 }}>Floor Map</span>
-            </div>
             <VRView locations={locations} path={path} currentLocation={scannedLocation} />
           </div>
         )}
