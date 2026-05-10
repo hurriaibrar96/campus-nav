@@ -166,7 +166,7 @@ export default function Portal() {
                     transition: "border-color 0.2s",
                   }}>
                     <option value="">Choose a location...</option>
-                    {locations.filter((l) => l.id !== scannedLocation && l.id !== 'stairs_3' && l.id !== 'ahs_corridor' && l.id !== 'corridor_junction' && l.id !== 'medan' && l.id !== 'main_corridor_junction' && l.id !== 'back_stairs' && l.id !== 'emergency_exit' && l.id !== 'stage' && l.id !== 'main_building').map((l) => (
+                    {locations.filter((l) => l.id !== scannedLocation && l.id !== 'stairs_3' && l.id !== 'ahs_corridor' && l.id !== 'corridor_junction' && l.id !== 'medan' && l.id !== 'main_corridor_junction' && l.id !== 'back_stairs' && l.id !== 'emergency_exit' && l.id !== 'stage' && l.id !== 'main_building' && l.id !== 'g2_junction').map((l) => (
                       <option key={l.id} value={l.id}>{l.label}</option>
                     ))}
                   </select>
