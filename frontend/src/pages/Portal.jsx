@@ -28,9 +28,12 @@ export default function Portal() {
   const [locations, setLocations] = useState([]);
   const [destination, setDestination] = useState("");
   const [path, setPath]     = useState([]);
+  const [chatPath, setChatPath] = useState([]);
   const [error, setError]   = useState("");
   const [mode, setMode]     = useState("map");
   const [loading, setLoading] = useState(false);
+
+  const activePath = chatPath.length > 0 ? chatPath : path;
 
   useEffect(() => {
     api.get("/navigation/locations").then(({ data }) => setLocations(data)).catch(() => {});
@@ -114,7 +117,7 @@ export default function Portal() {
         }}>
           {MODES.map(({ key, icon, label }) => {
             const isActive   = mode === key;
-            const isDisabled = key === "ar" && path.length === 0;
+            const isDisabled = key === "ar" && activePath.length === 0;
             return (
               <button key={key} onClick={() => !isDisabled && setMode(key)} style={{
                 background: isActive ? C.purple : C.white,
@@ -295,8 +298,15 @@ export default function Portal() {
           </div>
         )}
 
-        {mode === "chat" && <Chatbot currentLocation={scannedLocation} />}
-        {mode === "ar"   && <ARNavigator path={path} locations={locations} onExit={() => setMode("map")} />}
+        {mode === "chat" && (
+          <Chatbot
+            currentLocation={scannedLocation}
+            chatPath={chatPath}
+            setChatPath={setChatPath}
+            onStartAR={() => setMode("ar")}
+          />
+        )}
+        {mode === "ar"   && <ARNavigator path={activePath} locations={locations} onExit={() => setMode("map")} />}
         {mode === "vr"   && (
           <div style={{
             background: C.white, border: `1px solid ${C.purpleBorder}`,

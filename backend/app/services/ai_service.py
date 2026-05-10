@@ -9,7 +9,6 @@ INTENTS   = DATA["intents"]
 LOCATIONS = DATA["locations"]
 RESP      = DATA["responses"]
 
-# In-memory session store: { session_id: { "step": "ask_dest"|"done", "from": node_id } }
 _sessions: dict = {}
 
 def _match_location(text: str) -> str | None:
@@ -26,49 +25,60 @@ def _match_intent(text: str) -> str | None:
             return intent
     return None
 
-def _format_path(path: list) -> str:
-    all_locs = {l["id"]: l["label"] for l in get_all_locations()}
-    steps = " → ".join(all_locs.get(n, n) for n in path)
-    return f"Here's your route:\n{steps}"
+def _text(reply: str) -> dict:
+    return {"type": "text", "reply": reply}
 
-async def get_response(message: str, session_id: str, current_location: str = "") -> str:
+def _format_path(path: list) -> dict:
+    all_locs = {l["id"]: l for l in get_all_locations()}
+    steps = []
+    for i, node_id in enumerate(path):
+        loc = all_locs.get(node_id, {})
+        direction = ""
+        if i < len(path) - 1:
+            next_id   = path[i + 1]
+            neighbors = loc.get("neighbors", {})
+            dir_val   = neighbors.get(next_id, {})
+            direction = dir_val.get("direction", "") if isinstance(dir_val, dict) else ""
+        steps.append({"id": node_id, "label": loc.get("label", node_id), "direction": direction})
+    return {"type": "route", "steps": steps}
+
+async def get_response(message: str, session_id: str, current_location: str = "") -> dict:
     text    = message.lower().strip()
     session = _sessions.get(session_id, {})
 
-    # Step 2: waiting for destination
+    # Waiting for destination after being asked
     if session.get("step") == "ask_dest":
         dest = _match_location(text)
         if not dest:
-            return RESP["not_found"]
+            return _text(RESP["not_found"])
         start = session.get("from") or current_location
         _sessions.pop(session_id, None)
         if start == dest:
-            return RESP["same_location"]
+            return _text(RESP["same_location"])
         path = get_path(start, dest)
-        return _format_path(path) if path else RESP["no_path"]
+        return _format_path(path) if path else _text(RESP["no_path"])
 
-    # Always check for a destination first — handles "hi i want to go to stairs 2" in one shot
+    # Always try to find a destination in the message first
     dest = _match_location(text)
     if dest:
         if dest == current_location:
-            return RESP["same_location"]
+            return _text(RESP["same_location"])
         if current_location:
             path = get_path(current_location, dest)
-            return _format_path(path) if path else RESP["no_path"]
-        # destination known but no current location scanned yet
+            return _format_path(path) if path else _text(RESP["no_path"])
         _sessions[session_id] = {"step": "ask_dest", "from": ""}
-        return RESP["ask_dest"]
+        return _text(RESP["ask_dest"])
 
     intent = _match_intent(text)
 
     if intent == "greeting":
-        return RESP["greeting"]
+        return _text(RESP["greeting"])
 
     if intent == "help":
-        return RESP["help"]
+        return _text(RESP["help"])
 
     if intent == "where":
         _sessions[session_id] = {"step": "ask_dest", "from": current_location}
-        return RESP["ask_dest"]
+        return _text(RESP["ask_dest"])
 
-    return RESP["fallback"]
+    return _text(RESP["fallback"])
