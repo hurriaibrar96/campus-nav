@@ -47,24 +47,19 @@ async def get_response(message: str, session_id: str, current_location: str = ""
         path = get_path(start, dest)
         return _format_path(path) if path else RESP["no_path"]
 
-    intent = _match_intent(text)
-
-    # Direct navigation intent — try to extract both locations in one message
-    if intent == "where":
-        dest = _match_location(text)
-        start = _match_location(text.split("to")[-1]) if "from" not in text else _match_location(text.split("from")[-1])
-        if dest and (start or current_location):
-            origin = start or current_location
-            if origin == dest:
-                return RESP["same_location"]
-            path = get_path(origin, dest)
+    # Always check for a destination first — handles "hi i want to go to stairs 2" in one shot
+    dest = _match_location(text)
+    if dest:
+        if dest == current_location:
+            return RESP["same_location"]
+        if current_location:
+            path = get_path(current_location, dest)
             return _format_path(path) if path else RESP["no_path"]
-        if dest and not (start or current_location):
-            _sessions[session_id] = {"step": "ask_dest", "from": ""}
-            return RESP["ask_dest"]
-        # Has intent but no location found yet — ask for current location
-        _sessions[session_id] = {"step": "ask_dest", "from": current_location}
+        # destination known but no current location scanned yet
+        _sessions[session_id] = {"step": "ask_dest", "from": ""}
         return RESP["ask_dest"]
+
+    intent = _match_intent(text)
 
     if intent == "greeting":
         return RESP["greeting"]
@@ -72,10 +67,8 @@ async def get_response(message: str, session_id: str, current_location: str = ""
     if intent == "help":
         return RESP["help"]
 
-    # Maybe they just typed a location as their current position
-    loc = _match_location(text)
-    if loc:
-        _sessions[session_id] = {"step": "ask_dest", "from": loc}
+    if intent == "where":
+        _sessions[session_id] = {"step": "ask_dest", "from": current_location}
         return RESP["ask_dest"]
 
     return RESP["fallback"]

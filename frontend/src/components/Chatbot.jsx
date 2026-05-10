@@ -5,7 +5,7 @@ const SESSION_ID = crypto.randomUUID();
 
 export default function Chatbot({ currentLocation = "" }) {
   const [messages, setMessages] = useState([
-    { from: "bot", text: "Hi! I'm your campus guide. Where would you like to go?" },
+    { from: "bot", text: "Hi! I'm your SuperiorXR campus guide 🧭\nWhere would you like to go?" },
   ]);
   const [input, setInput]   = useState("");
   const [loading, setLoading] = useState(false);
