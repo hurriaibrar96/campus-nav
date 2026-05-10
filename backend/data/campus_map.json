@@ -3,14 +3,14 @@
     "label": "Entrance",
     "x": 0, "y": 0,
     "neighbors": {
-      "carbs_dept": { "distance": 1, "direction": "STRAIGHT" }
+      "carbs_dept": { "distance": 1, "direction": "LEFT" }
     }
   },
   "carbs_dept": {
     "label": "Carbs Department",
     "x": 2, "y": 1.5,
     "neighbors": {
-      "entrance": { "distance": 1, "direction": "STRAIGHT" },
+      "entrance": { "distance": 1, "direction": "BACK" },
       "emergency_exit": { "distance": 1, "direction": "STRAIGHT" },
       "computer_lab": { "distance": 3, "direction": "STRAIGHT" }
     }
@@ -61,19 +61,19 @@
     "label": "G1",
     "x": 6, "y": 2,
     "neighbors": {
-      "sitting_area1": { "distance": 1, "direction": "LEFT" },
-      "boys_washroom": { "distance": 1, "direction": "BACK" },
-      "computer_lab": { "distance": 1, "direction": "RIGHT" }
+      "sitting_area1": { "distance": 1, "direction": "RIGHT" },
+      "boys_washroom": { "distance": 1, "direction": "STRAIGHT" },
+      "computer_lab": { "distance": 1, "direction": "BACK" }
     }
   },
   "computer_lab": {
     "label": "Computer Lab 1",
     "x": 5, "y": 3,
     "neighbors": {
-      "boys_washroom": { "distance": 1, "direction": "RIGHT" },
-      "sitting_area1": { "distance": 1, "direction": "STRAIGHT" },
+      "boys_washroom": { "distance": 1, "direction": "LEFT" },
+      "sitting_area1": { "distance": 1, "direction": "FRONT" },
       "library_gate1": { "distance": 1, "direction": "STRAIGHT" },
-      "g1": { "distance": 1, "direction": "RIGHT" },
+      "g1": { "distance": 1, "direction": "STRAIGHT" },
       "carbs_dept": { "distance": 3, "direction": "STRAIGHT" },
       "stairs_1": { "distance": 1, "direction": "LEFT" }
     }
@@ -82,15 +82,15 @@
     "label": "Sitting Area 1",
     "x": 5, "y": 2,
     "neighbors": {
-      "computer_lab": { "distance": 1, "direction": "STRAIGHT" },
-      "g1": { "distance": 1, "direction": "RIGHT" }
+      "computer_lab": { "distance": 1, "direction": "BEHIND" },
+      "g1": { "distance": 1, "direction": "LEFT" }
     }
   },
   "library_gate1": {
     "label": "Library Gate 1",
     "x": 11, "y": 5.5,
     "neighbors": {
-      "computer_lab": { "distance": 1, "direction": "STRAIGHT" },
+      "computer_lab": { "distance": 1, "direction": "BACK" },
       "g2": { "distance": 2, "direction": "RIGHT" },
       "g3": { "distance": 1, "direction": "STRAIGHT" },
       "sitting_area2": { "distance": 2, "direction": "STRAIGHT" },

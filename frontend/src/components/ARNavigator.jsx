@@ -329,7 +329,7 @@ export default function ARNavigator({ path, locations, onExit }) {
 
       {/* Full route list — visible when scrolling down */}
       <div style={{
-        width: "100%", background: "linear-gradient(135deg, #5a1068, #7B2D8B)",
+        width: "100%", background: "#ffffff",
         padding: "16px", boxSizing: "border-box",
         fontFamily: "Inter, sans-serif", color: "white",
         borderTop: "1px solid rgba(124,92,191,0.3)",
