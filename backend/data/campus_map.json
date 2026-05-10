@@ -135,7 +135,10 @@
       "meelan_exit": { "distance": 1, "direction": "LEFT" },
       "library_gate1": { "distance": 2, "direction": "BACK" },
       "aerolab": { "distance": 2, "direction": "STRAIGHT" },
-      "ahs_corridor": { "distance": 2, "direction": "STRAIGHT" } {
+      "ahs_corridor": { "distance": 2, "direction": "STRAIGHT" }
+    }
+  },
+  "g3": {
     "label": "G3 (Straight)",
     "x": 14, "y": 5.5,
     "neighbors": {
