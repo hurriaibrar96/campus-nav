@@ -36,8 +36,8 @@ def _match_intent(text: str) -> str | None:
 def _text(reply: str) -> dict:
     return {"type": "text", "reply": reply}
 
-def _format_path(path: list) -> dict:
-    all_locs = {l["id"]: l for l in get_all_locations()}
+def _format_path(path: list, start: str = "") -> dict:
+    all_locs = {l["id"]: l for l in get_all_locations(start)}
     steps = []
     for i, node_id in enumerate(path):
         loc = all_locs.get(node_id, {})
@@ -64,7 +64,7 @@ async def get_response(message: str, session_id: str, current_location: str = ""
         if start == dest:
             return _text(RESP["same_location"])
         path = get_path(start, dest)
-        return _format_path(path) if path else _text(RESP["no_path"])
+        return _format_path(path, start) if path else _text(RESP["no_path"])
 
     # Always try to find a destination in the message first
     matched = _match_all_locations(text)
@@ -78,7 +78,7 @@ async def get_response(message: str, session_id: str, current_location: str = ""
         if start == dest:
             return _text(RESP["same_location"])
         path = get_path(start, dest)
-        return _format_path(path) if path else _text(RESP["no_path"])
+        return _format_path(path, start) if path else _text(RESP["no_path"])
 
     intent = _match_intent(text)
 
