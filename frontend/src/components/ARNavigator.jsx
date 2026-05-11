@@ -4,7 +4,7 @@ import CameraHandler from "./CameraHandler";
 const LABEL = { up: "⬆ Go Forward", down: "⬇ Go Back", left: "⬅ Turn Left", right: "➡ Turn Right" };
 
 const dirMap = {
-  "STRAIGHT": "up", "FRONT": "up", "BACK": "down", "BEHIND": "down",
+  "STRAIGHT": "up", "FRONT": "up", "BACK": "up", "BEHIND": "up",
   "LEFT": "left", "RIGHT": "right",
   "ACUTE RIGHT": "right", "OBTUSE RIGHT": "right", "FAR RIGHT": "right",
   "VERY RIGHT": "right", "RIGHT FRONT": "right", "RIGHT STRAIGHT": "right",
