@@ -10,6 +10,7 @@ const MODES = [
   { key: "chat", icon: "🤖", label: "Chatbot"   },
   { key: "vr",   icon: "🏛️", label: "Floor Map" },
   { key: "ar",   icon: "📷", label: "AR View"   },
+  { key: "vrtour", icon: "🎥", label: "VR View"  },
 ];
 
 const C = {
@@ -112,7 +113,7 @@ export default function Portal() {
 
         {/* ── Nav Tabs ── */}
         <div style={{
-          display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8,
+          display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8,
           marginBottom: 16,
         }}>
           {MODES.map(({ key, icon, label }) => {
@@ -307,6 +308,20 @@ export default function Portal() {
           />
         )}
         {mode === "ar"   && <ARNavigator path={activePath} locations={locations} onExit={() => setMode("map")} />}
+        {mode === "vrtour" && (
+          <div style={{
+            background: C.white, border: `1px solid ${C.purpleBorder}`,
+            borderRadius: 16, overflow: "hidden",
+            boxShadow: "0 2px 12px rgba(108,71,217,0.08)",
+          }}>
+            <video
+              src="/superior.mp4"
+              controls
+              autoPlay
+              style={{ width: "100%", display: "block" }}
+            />
+          </div>
+        )}
         {mode === "vr"   && (
           <div style={{
             background: C.white, border: `1px solid ${C.purpleBorder}`,
