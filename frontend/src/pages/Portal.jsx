@@ -54,7 +54,7 @@ export default function Portal() {
   const getLabel = (id) => locations.find((l) => l.id === id)?.label ?? id;
 
   return (
-    <div style={{ minHeight: "100vh", background: C.white, fontFamily: "Inter, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: C.white, backgroundImage: "url('/dee.jpeg')", backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed", fontFamily: "Inter, sans-serif" }}>
 
       {/* ── Header ── */}
       <div style={{
