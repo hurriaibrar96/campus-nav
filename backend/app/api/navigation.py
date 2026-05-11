@@ -4,8 +4,8 @@ from app.services.navigation_service import get_path, get_all_locations
 router = APIRouter()
 
 @router.get("/locations")
-async def locations():
-    return get_all_locations()
+async def locations(start: str = ""):
+    return get_all_locations(start)
 
 @router.get("/route")
 async def route(start: str, end: str):

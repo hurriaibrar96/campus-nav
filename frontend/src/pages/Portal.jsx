@@ -36,7 +36,7 @@ export default function Portal() {
   const activePath = chatPath.length > 0 ? chatPath : path;
 
   useEffect(() => {
-    api.get("/navigation/locations").then(({ data }) => setLocations(data)).catch(() => {});
+    api.get("/navigation/locations", { params: { start: scannedLocation } }).then(({ data }) => setLocations(data)).catch(() => {});
   }, []);
 
   const handleNavigate = async () => {

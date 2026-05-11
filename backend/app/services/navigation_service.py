@@ -14,8 +14,9 @@ AHS_STARTS = {"ahs_faculty"}
 def _get_graph(start: str) -> dict:
     return GRAPH_AHS if start in AHS_STARTS else GRAPH
 
-def get_all_locations() -> list:
-    return [{"id": k, "label": v["label"], "x": v["x"], "y": v["y"], "neighbors": v["neighbors"]} for k, v in GRAPH.items()]
+def get_all_locations(start: str = "") -> list:
+    graph = _get_graph(start) if start else GRAPH
+    return [{"id": k, "label": v["label"], "x": v["x"], "y": v["y"], "neighbors": v["neighbors"]} for k, v in graph.items()]
 
 def get_path(start: str, end: str) -> list:
     start = start.lower().strip()
