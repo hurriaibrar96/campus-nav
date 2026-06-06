@@ -14,29 +14,31 @@ const dirMap = {
   "CROSS": "up", "CROSS LEFT": "left", "CROSS RIGHT": "right", "STRAIGHT BACK": "down",
 };
 
-// direction string → target bearing offset in degrees
-const bearingMap = {
-  "up": 0, "down": 180, "left": -90, "right": 90,
-};
+const bearingMap = { up: 0, down: 180, left: -90, right: 90 };
 
-const ALIGN_THRESHOLD = 25; // degrees tolerance
-const ALIGN_DURATION  = 2000; // ms to hold alignment before auto-advance
+// 1 distance unit in campus.json = how many real meters
+const METERS_PER_UNIT = 10;
+// accelerometer: minimum acceleration magnitude to count as a step
+const STEP_THRESHOLD = 12;
+// average step length in meters
+const STEP_LENGTH = 0.75;
 
 export default function ARNavigator({ path, locations, onExit }) {
-  const [step, setStep]             = useState(0);
-  const [arrived, setArrived]       = useState(false);
+  const [step, setStep]           = useState(0);
+  const [arrived, setArrived]     = useState(false);
   const [deviceHeading, setDeviceHeading] = useState(null);
   const [orientationPermission, setOrientationPermission] = useState("prompt");
-  const [alignProgress, setAlignProgress] = useState(0); // 0–1
+  const [distanceProgress, setDistanceProgress] = useState(0); // 0–1
 
-  const videoRef      = useRef(null);
-  const canvasRef     = useRef(null);
-  const alignStart    = useRef(null); // timestamp when alignment began
-  const stepRef       = useRef(step);
-  const headingRef    = useRef(null);
-  const arrivedRef    = useRef(arrived);
+  const canvasRef       = useRef(null);
+  const headingRef      = useRef(null);
+  const stepRef         = useRef(0);
+  const arrivedRef      = useRef(false);
+  const distWalkedRef   = useRef(0);  // meters walked on current edge
+  const lastAccelRef    = useRef(0);  // for step peak detection
+  const stepCooldownRef = useRef(false);
 
-  useEffect(() => { stepRef.current    = step;   }, [step]);
+  useEffect(() => { stepRef.current   = step;   }, [step]);
   useEffect(() => { arrivedRef.current = arrived; }, [arrived]);
 
   const getNode    = (id) => locations.find((l) => l.id === id);
@@ -47,13 +49,56 @@ export default function ARNavigator({ path, locations, onExit }) {
   const nextNode    = getNode(path[step + 1]);
   const jsonDir     = currentNode?.neighbors?.[path[step + 1]]?.direction ?? "";
   const mappedDir   = dirMap[jsonDir] ?? "up";
+  const edgeDist    = (currentNode?.neighbors?.[path[step + 1]]?.distance ?? 1) * METERS_PER_UNIT;
+
   const instruction = step === path.length - 1
     ? `📍 You have arrived at ${endLabel}`
     : `${LABEL[mappedDir]} → ${nextNode?.label ?? path[step + 1]}`;
 
-  const progress = ((step + 1) / path.length) * 100;
+  const routeProgress = ((step + 1) / path.length) * 100;
 
-  // ── orientation permission ──────────────────────────────────────────────────
+  // ── step counter via accelerometer ─────────────────────────────────────────
+  useEffect(() => {
+    const handleMotion = (e) => {
+      if (arrivedRef.current) return;
+      const a = e.accelerationIncludingGravity;
+      if (!a) return;
+      const mag = Math.sqrt(a.x ** 2 + a.y ** 2 + a.z ** 2);
+
+      // detect peak (step) — magnitude crosses threshold going up then down
+      if (mag > STEP_THRESHOLD && lastAccelRef.current <= STEP_THRESHOLD && !stepCooldownRef.current) {
+        stepCooldownRef.current = true;
+        setTimeout(() => { stepCooldownRef.current = false; }, 350); // debounce
+
+        distWalkedRef.current += STEP_LENGTH;
+
+        const currentEdgeDist = (() => {
+          const node = locations.find((l) => l.id === path[stepRef.current]);
+          return (node?.neighbors?.[path[stepRef.current + 1]]?.distance ?? 1) * METERS_PER_UNIT;
+        })();
+
+        const p = Math.min(distWalkedRef.current / currentEdgeDist, 1);
+        setDistanceProgress(p);
+
+        if (distWalkedRef.current >= currentEdgeDist) {
+          distWalkedRef.current = 0;
+          setDistanceProgress(0);
+          const next = stepRef.current + 1;
+          if (next >= path.length - 1) {
+            setArrived(true);
+          } else {
+            setStep(next);
+          }
+        }
+      }
+      lastAccelRef.current = mag;
+    };
+
+    window.addEventListener("devicemotion", handleMotion, true);
+    return () => window.removeEventListener("devicemotion", handleMotion, true);
+  }, []);
+
+  // ── orientation / compass ───────────────────────────────────────────────────
   const startOrientationTracking = () => {
     const handle = (e) => {
       if (e.alpha !== null) {
@@ -90,7 +135,7 @@ export default function ARNavigator({ path, locations, onExit }) {
     };
   }, []);
 
-  // ── canvas: live compass arrow + alignment ring ─────────────────────────────
+  // ── canvas: compass-driven arrow ────────────────────────────────────────────
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || arrived) return;
@@ -102,93 +147,54 @@ export default function ARNavigator({ path, locations, onExit }) {
     const W   = canvas.width;
     const H   = canvas.height;
     const cx  = W / 2;
-    const cy  = H * 0.45;
+    const cy  = H * 0.42;
     let rafId;
 
     function getArrowAngle() {
       const heading = headingRef.current;
       if (heading === null) return 0;
-      // target bearing offset for current step direction
-      const currentDir = dirMap[
-        getNode(path[stepRef.current])?.neighbors?.[path[stepRef.current + 1]]?.direction ?? ""
+      const dir    = dirMap[
+        locations.find((l) => l.id === path[stepRef.current])
+          ?.neighbors?.[path[stepRef.current + 1]]?.direction ?? ""
       ] ?? "up";
-      const target = bearingMap[currentDir] ?? 0;
-      // difference: how much user needs to rotate
-      let diff = target - heading;
-      // normalise to -180..180
-      diff = ((diff + 540) % 360) - 180;
+      const target = bearingMap[dir] ?? 0;
+      let diff     = target - heading;
+      diff         = ((diff + 540) % 360) - 180;
       return (diff * Math.PI) / 180;
     }
 
-    function drawArrow(angleRad, aligned) {
-      const size  = 70;
+    function drawArrow(angleRad) {
+      const size  = 72;
+      const aligned = Math.abs((angleRad * 180) / Math.PI) < 20;
       const color = aligned ? "#00ff88" : "#00E5FF";
+
       ctx.save();
       ctx.translate(cx, cy);
       ctx.rotate(angleRad);
       ctx.shadowColor = color;
-      ctx.shadowBlur  = 24;
+      ctx.shadowBlur  = 28;
       ctx.fillStyle   = color;
+
       // stem
       ctx.beginPath();
-      ctx.rect(-8, 0, 16, size * 0.7);
+      ctx.roundRect(-9, 8, 18, size * 0.65, 4);
       ctx.fill();
+
       // arrowhead
       ctx.beginPath();
-      ctx.moveTo(0,       -size * 0.55);
-      ctx.lineTo( size * 0.55,  size * 0.15);
-      ctx.lineTo(-size * 0.55,  size * 0.15);
+      ctx.moveTo(0,           -size * 0.52);
+      ctx.lineTo( size * 0.52, size * 0.12);
+      ctx.lineTo(-size * 0.52, size * 0.12);
       ctx.closePath();
       ctx.fill();
-      ctx.restore();
-    }
 
-    function drawRing(progress) {
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.strokeStyle = "#00ff88";
-      ctx.lineWidth   = 5;
-      ctx.shadowColor = "#00ff88";
-      ctx.shadowBlur  = 12;
-      ctx.beginPath();
-      ctx.arc(0, 0, 90, -Math.PI / 2, -Math.PI / 2 + progress * 2 * Math.PI);
-      ctx.stroke();
       ctx.restore();
     }
 
     function frame() {
       ctx.clearRect(0, 0, W, H);
-
       if (arrivedRef.current) { cancelAnimationFrame(rafId); return; }
-
-      const angleRad = getArrowAngle();
-      const deg      = Math.abs((angleRad * 180) / Math.PI);
-      const aligned  = deg < ALIGN_THRESHOLD;
-
-      // alignment timer
-      if (aligned) {
-        if (!alignStart.current) alignStart.current = performance.now();
-        const elapsed = performance.now() - alignStart.current;
-        const p = Math.min(elapsed / ALIGN_DURATION, 1);
-        setAlignProgress(p);
-        drawRing(p);
-        if (elapsed >= ALIGN_DURATION) {
-          alignStart.current = null;
-          setAlignProgress(0);
-          const next = stepRef.current + 1;
-          if (next >= path.length - 1) {
-            setArrived(true);
-            cancelAnimationFrame(rafId);
-            return;
-          }
-          setStep(next);
-        }
-      } else {
-        alignStart.current = null;
-        setAlignProgress(0);
-      }
-
-      drawArrow(angleRad, aligned);
+      drawArrow(getArrowAngle());
       rafId = requestAnimationFrame(frame);
     }
 
@@ -199,27 +205,50 @@ export default function ARNavigator({ path, locations, onExit }) {
   if (path.length === 0) return <p style={{ color: "var(--cream)" }}>No route to display.</p>;
 
   return (
-    <div style={{ position: "relative", width: "100%", minHeight: "100vh", overflowY: "auto", background: "#000", display: "flex", flexDirection: "column" }}>
+    <div style={{ position: "relative", width: "100%", minHeight: "100vh", background: "#000", display: "flex", flexDirection: "column" }}>
 
-      {/* Camera */}
+      {/* Camera + AR canvas */}
       <div style={{ position: "relative", width: "100%", height: "78vh", flexShrink: 0 }}>
-        <CameraHandler onStream={(ref) => { videoRef.current = ref?.current; }} />
+        <CameraHandler onStream={(ref) => {}} />
         <canvas ref={canvasRef} style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none" }} />
+
+        {/* Walking distance arc — shown on camera overlay */}
+        <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
+          <circle
+            cx="50%" cy="42%"
+            r="52"
+            fill="none"
+            stroke="rgba(255,255,255,0.1)"
+            strokeWidth="5"
+          />
+          <circle
+            cx="50%" cy="42%"
+            r="52"
+            fill="none"
+            stroke="#00ff88"
+            strokeWidth="5"
+            strokeDasharray={`${2 * Math.PI * 52}`}
+            strokeDashoffset={`${2 * Math.PI * 52 * (1 - distanceProgress)}`}
+            strokeLinecap="round"
+            transform={`rotate(-90, ${canvasRef.current?.width / 2 ?? 0}, ${(canvasRef.current?.height ?? 0) * 0.42})`}
+            style={{ transition: "stroke-dashoffset 0.3s ease" }}
+          />
+        </svg>
       </div>
 
       {/* iOS permission prompt */}
       {orientationPermission === "prompt" && (
         <div style={{
-          position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
+          position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)",
           background: "rgba(15,8,40,0.95)", backdropFilter: "blur(20px)",
-          borderRadius: 20, padding: "24px", textAlign: "center",
+          borderRadius: 20, padding: 24, textAlign: "center",
           border: "1px solid rgba(124,92,191,0.4)", zIndex: 100, maxWidth: 320,
         }}>
           <div style={{ fontSize: "3rem", marginBottom: 12 }}>🧭</div>
           <h3 style={{ color: "#fdf6ec", fontSize: "1.1rem", fontWeight: 700, marginBottom: 8 }}>Enable Compass</h3>
-          <p style={{ color: "rgba(253,246,236,0.7)", fontSize: "0.85rem", marginBottom: 20 }}>Allow access to device orientation for accurate AR navigation</p>
+          <p style={{ color: "rgba(253,246,236,0.7)", fontSize: "0.85rem", marginBottom: 20 }}>Allow access to device orientation for AR navigation</p>
           <button onClick={requestOrientationPermission} style={{
-            width: "100%", padding: "12px",
+            width: "100%", padding: 12,
             background: "linear-gradient(135deg, #7B2D8B, #5a1068)",
             border: "none", borderRadius: 12,
             color: "white", fontSize: "0.95rem", fontWeight: "bold", cursor: "pointer",
@@ -271,18 +300,26 @@ export default function ARNavigator({ path, locations, onExit }) {
       }}>
         {!arrived ? (
           <>
-            {/* Progress bar */}
+            {/* Overall route progress */}
             <div style={{ height: 3, background: "#444", borderRadius: 2, marginBottom: 10, overflow: "hidden" }}>
-              <div style={{ width: `${progress}%`, height: "100%", background: "linear-gradient(90deg, #7B2D8B, #5a1068)", transition: "width 0.3s" }} />
+              <div style={{ width: `${routeProgress}%`, height: "100%", background: "linear-gradient(90deg,#7B2D8B,#5a1068)", transition: "width 0.3s" }} />
             </div>
 
             <div style={{ fontSize: 16, fontWeight: "bold", marginBottom: 4 }}>{instruction}</div>
             <div style={{ fontSize: 10, opacity: 0.5, marginBottom: 8 }}>Step {step + 1} of {path.length}</div>
 
-            <div style={{ fontSize: 12, color: alignProgress > 0 ? "#00ff88" : "rgba(255,255,255,0.45)", transition: "color 0.3s" }}>
-              {alignProgress > 0
-                ? `✅ Aligned — hold for ${Math.ceil((1 - alignProgress) * 2)}s…`
-                : "🔄 Rotate your phone until the arrow points up"}
+            {/* Walking progress for current edge */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ flex: 1, height: 6, background: "#333", borderRadius: 3, overflow: "hidden" }}>
+                <div style={{
+                  width: `${distanceProgress * 100}%`, height: "100%",
+                  background: "linear-gradient(90deg,#00E5FF,#00ff88)",
+                  transition: "width 0.3s", borderRadius: 3,
+                }} />
+              </div>
+              <div style={{ fontSize: 11, color: "#00E5FF", whiteSpace: "nowrap" }}>
+                {Math.round(distWalkedRef.current)}m / {edgeDist}m
+              </div>
             </div>
           </>
         ) : (
@@ -292,7 +329,7 @@ export default function ARNavigator({ path, locations, onExit }) {
             <div style={{ fontSize: 11, opacity: 0.75, marginBottom: 10 }}>{endLabel} reached successfully</div>
             <button onClick={onExit} style={{
               padding: "8px 24px",
-              background: "linear-gradient(135deg, #7B2D8B, #5a1068)",
+              background: "linear-gradient(135deg,#7B2D8B,#5a1068)",
               border: "none", borderRadius: 10,
               color: "white", fontSize: 13, fontWeight: "bold", cursor: "pointer",
             }}>Done</button>
@@ -303,16 +340,16 @@ export default function ARNavigator({ path, locations, onExit }) {
       {/* Full route list */}
       <div style={{
         width: "100%", background: "#0a0a0a",
-        padding: "16px", boxSizing: "border-box",
+        padding: 16, boxSizing: "border-box",
         fontFamily: "Inter, sans-serif",
         borderTop: "1px solid rgba(124,92,191,0.3)",
       }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: "#9b7fd4", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Full Route</div>
         {path.map((nodeId, i) => {
-          const isFirst = i === 0;
-          const isLast  = i === path.length - 1;
+          const isFirst   = i === 0;
+          const isLast    = i === path.length - 1;
           const isCurrent = i === step;
-          const label   = getNode(nodeId)?.label ?? nodeId;
+          const label     = getNode(nodeId)?.label ?? nodeId;
           return (
             <div key={nodeId} style={{
               display: "flex", alignItems: "center", gap: 12,
