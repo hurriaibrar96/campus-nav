@@ -16,8 +16,12 @@ const dirMap = {
 
 const bearingMap = { up: 0, down: 180, left: -90, right: 90 };
 
-// 1 distance unit in campus.json = how many real meters
-const METERS_PER_UNIT = 10;
+// ─── TUNING ────────────────────────────────────────────────────────────────
+// All distances in campus.json are 1.
+// Set this to the real average corridor length in meters on your campus.
+// Too small = advances too early.  Too large = advances too late.
+const METERS_PER_UNIT = 10; // ← change this based on real campus testing
+// ────────────────────────────────────────────────────────────────────────────
 // accelerometer: minimum acceleration magnitude to count as a step
 const STEP_THRESHOLD = 12;
 // average step length in meters
