@@ -36,6 +36,7 @@ export default function ARNavigator({ path, locations, onExit }) {
 
   const canvasRef       = useRef(null);
   const headingRef      = useRef(null);
+  const headingBuffer   = useRef([]); // for smoothing
   const stepRef         = useRef(0);
   const arrivedRef      = useRef(false);
   const distWalkedRef   = useRef(0);  // meters walked on current edge
@@ -106,9 +107,17 @@ export default function ARNavigator({ path, locations, onExit }) {
   const startOrientationTracking = () => {
     const handle = (e) => {
       if (e.alpha !== null) {
-        const h = e.webkitCompassHeading ?? e.alpha;
-        headingRef.current = h;
-        setDeviceHeading(h);
+        const raw = e.webkitCompassHeading ?? e.alpha;
+        // smooth: keep last 5 readings, average them
+        const buf = headingBuffer.current;
+        buf.push(raw);
+        if (buf.length > 5) buf.shift();
+        // circular mean to handle 0/360 wrap
+        const sin = buf.reduce((s, h) => s + Math.sin(h * Math.PI / 180), 0);
+        const cos = buf.reduce((s, h) => s + Math.cos(h * Math.PI / 180), 0);
+        const avg = (Math.atan2(sin, cos) * 180 / Math.PI + 360) % 360;
+        headingRef.current = avg;
+        setDeviceHeading(avg);
       }
     };
     window.addEventListener("deviceorientationabsolute", handle, true);
