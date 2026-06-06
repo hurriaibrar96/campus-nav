@@ -139,7 +139,10 @@ export default function ARNavigator({ path, locations, onExit }) {
     };
   }, []);
 
-  // ── canvas: compass-driven arrow ────────────────────────────────────────────
+  // pitch from gyroscope (beta: -180..180, 90 = phone flat, 0 = phone upright)
+  const pitchRef = useRef(90);
+
+  // ── canvas: gyroscope + compass driven 3D floor AR arrow ───────────────────
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || arrived) return;
@@ -152,6 +155,12 @@ export default function ARNavigator({ path, locations, onExit }) {
     const H   = canvas.height;
     let rafId;
 
+    // capture pitch (beta) from orientation event already running
+    const handlePitch = (e) => {
+      if (e.beta !== null) pitchRef.current = e.beta;
+    };
+    window.addEventListener("deviceorientation", handlePitch, true);
+
     function getCurrentDir() {
       return dirMap[
         locations.find((l) => l.id === path[stepRef.current])
@@ -159,119 +168,139 @@ export default function ARNavigator({ path, locations, onExit }) {
       ] ?? "up";
     }
 
-    function getArrowAngle() {
+    // compass heading diff → how much to curve left/right (-1 to +1)
+    function getCurveFactor() {
       const heading = headingRef.current;
       if (heading === null) return 0;
-      const target = bearingMap[getCurrentDir()] ?? 0;
-      let diff = target - heading;
-      diff = ((diff + 540) % 360) - 180;
-      return (diff * Math.PI) / 180;
+      const dir    = getCurrentDir();
+      const target = bearingMap[dir] ?? 0;
+      let diff     = target - heading;
+      diff         = ((diff + 540) % 360) - 180; // -180..180
+      // clamp to ±90 and normalise to -1..+1
+      return Math.max(-1, Math.min(1, diff / 90));
     }
 
-    // Draw a 3D perspective path on the floor with direction curve
-    function draw3DArrow(dir, aligned, animOffset) {
+    function draw(animOffset) {
+      ctx.clearRect(0, 0, W, H);
+      if (arrivedRef.current) return;
+
+      const dir         = getCurrentDir();
+      const curveFactor = getCurveFactor(); // -1=hard left, 0=straight, +1=hard right
+
+      // pitch: 90°=phone flat/floor, 0°=upright. clamp 10..90
+      const pitch     = Math.max(10, Math.min(90, pitchRef.current));
+      // vanishing point rises as phone tilts up (more upright = horizon higher)
+      const vpY       = H * (1 - (pitch / 90) * 0.72);  // range: H*0.28 .. H*1.0
+      const baseY     = H * 0.99;
+      const SEGMENTS  = 16;
+      const aligned   = Math.abs(curveFactor) < 0.22;
       const color     = aligned ? "#00ff88" : "#00E5FF";
-      const shadowClr = aligned ? "#00ff88" : "#007AFF";
-      const vp        = { x: W / 2, y: H * 0.38 };  // vanishing point
-      const base      = H * 0.97;                     // bottom of screen (floor)
-      const SEGMENTS  = 12;
+      const fillColor = aligned ? "rgba(0,255,136,0.12)" : "rgba(0,229,255,0.09)";
 
-      // build perspective path points bottom → vanishing point with curve
+      // each point along the path — perspective + compass curve
       function getPoint(t) {
-        const ease = t * t; // perspective compression
-        const y    = base - (base - vp.y) * t;
-        let x      = W / 2;
-
-        if (dir === "right") {
-          // curves right in top half
-          x = W / 2 + (t > 0.4 ? ((t - 0.4) / 0.6) ** 2 * W * 0.38 : 0);
-        } else if (dir === "left") {
-          x = W / 2 - (t > 0.4 ? ((t - 0.4) / 0.6) ** 2 * W * 0.38 : 0);
-        } else if (dir === "down") {
-          // goes toward viewer (bottom)
-          return { x: W / 2, y: base - (base - vp.y) * (1 - t) };
-        }
-        return { x, y };
+        // y: baseY → vpY as t goes 0→1
+        const y  = baseY - (baseY - vpY) * t;
+        // width of lane shrinks with perspective
+        const hw = (W * 0.18) * (1 - t * 0.88);
+        // curve: starts at centre, bends left/right in upper portion
+        const bend = t > 0.3
+          ? curveFactor * ((t - 0.3) / 0.7) ** 1.6 * W * 0.45
+          : 0;
+        return { x: W / 2 + bend, y, hw };
       }
 
-      // draw glowing road / path lane
       ctx.save();
-      ctx.shadowColor = shadowClr;
-      ctx.shadowBlur  = 18;
 
-      // left edge of path
+      // ── filled lane ──
       ctx.beginPath();
       for (let i = 0; i <= SEGMENTS; i++) {
-        const t  = i / SEGMENTS;
-        const pt = getPoint(t);
-        const hw = 38 * (1 - t * 0.82); // width shrinks with perspective
-        if (i === 0) ctx.moveTo(pt.x - hw, pt.y);
-        else ctx.lineTo(pt.x - hw, pt.y);
+        const { x, y, hw } = getPoint(i / SEGMENTS);
+        if (i === 0) ctx.moveTo(x - hw, y); else ctx.lineTo(x - hw, y);
       }
       for (let i = SEGMENTS; i >= 0; i--) {
-        const t  = i / SEGMENTS;
-        const pt = getPoint(t);
-        const hw = 38 * (1 - t * 0.82);
-        ctx.lineTo(pt.x + hw, pt.y);
+        const { x, y, hw } = getPoint(i / SEGMENTS);
+        ctx.lineTo(x + hw, y);
       }
       ctx.closePath();
-      ctx.fillStyle = `${aligned ? "rgba(0,255,136,0.13)" : "rgba(0,229,255,0.10)"}`;
+      ctx.fillStyle = fillColor;
       ctx.fill();
 
-      // animated dashed centre line
-      const dashLen = 18;
-      for (let i = 0; i <= SEGMENTS; i++) {
-        const t      = ((i / SEGMENTS) + animOffset) % 1;
-        const tNext  = ((( i + 0.5) / SEGMENTS) + animOffset) % 1;
-        const pt     = getPoint(t);
-        const ptNext = getPoint(Math.min(tNext, 1));
-        const alpha  = t < 0.85 ? 1 : (1 - t) / 0.15;
-        ctx.globalAlpha = alpha * 0.9;
-        ctx.strokeStyle = color;
-        ctx.lineWidth   = Math.max(1.5, 4 * (1 - t * 0.75));
+      // ── left & right glowing edge lines ──
+      ["left", "right"].forEach((side) => {
         ctx.beginPath();
-        ctx.moveTo(pt.x, pt.y);
-        ctx.lineTo(ptNext.x, ptNext.y);
+        for (let i = 0; i <= SEGMENTS; i++) {
+          const { x, y, hw } = getPoint(i / SEGMENTS);
+          const ex = side === "left" ? x - hw : x + hw;
+          const alpha = 1 - i / SEGMENTS * 0.6;
+          if (i === 0) { ctx.moveTo(ex, y); }
+          else ctx.lineTo(ex, y);
+        }
+        ctx.strokeStyle = color;
+        ctx.lineWidth   = 2.5;
+        ctx.shadowColor = color;
+        ctx.shadowBlur  = 10;
+        ctx.globalAlpha = 0.7;
+        ctx.stroke();
+      });
+      ctx.globalAlpha = 1;
+      ctx.shadowBlur  = 0;
+
+      // ── animated dashed centre line (flows forward) ──
+      for (let i = 0; i < SEGMENTS; i++) {
+        const t0 = ((i / SEGMENTS) + animOffset) % 1;
+        const t1 = (((i + 0.45) / SEGMENTS) + animOffset) % 1;
+        const p0 = getPoint(t0);
+        const p1 = getPoint(Math.min(t1, 0.99));
+        const alpha = t0 < 0.88 ? 0.9 : (1 - t0) / 0.12;
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = color;
+        ctx.lineWidth   = Math.max(1, 3.5 * (1 - t0 * 0.8));
+        ctx.shadowColor = color;
+        ctx.shadowBlur  = 8;
+        ctx.beginPath();
+        ctx.moveTo(p0.x, p0.y);
+        ctx.lineTo(p1.x, p1.y);
         ctx.stroke();
       }
       ctx.globalAlpha = 1;
+      ctx.shadowBlur  = 0;
 
-      // arrowhead at the vanishing end
-      const tipT  = 0.72;
-      const tip   = getPoint(tipT);
-      const tipW  = 28 * (1 - tipT * 0.75);
-      const tipH  = 22 * (1 - tipT * 0.75);
+      // ── arrowhead near vanishing point ──
+      const tip  = getPoint(0.68);
+      const base = getPoint(0.78);
+      const aw   = tip.hw * 2.2;
+      const ah   = Math.abs(base.y - tip.y) * 0.9;
       ctx.fillStyle   = color;
-      ctx.shadowBlur  = 22;
+      ctx.shadowColor = color;
+      ctx.shadowBlur  = 20;
       ctx.globalAlpha = 0.95;
       ctx.beginPath();
-      ctx.moveTo(tip.x,        tip.y - tipH);
-      ctx.lineTo(tip.x + tipW, tip.y + tipH * 0.4);
-      ctx.lineTo(tip.x,        tip.y + tipH * 0.1);
-      ctx.lineTo(tip.x - tipW, tip.y + tipH * 0.4);
+      ctx.moveTo(tip.x,        tip.y);
+      ctx.lineTo(tip.x + aw,   tip.y + ah);
+      ctx.lineTo(tip.x,        tip.y + ah * 0.45);
+      ctx.lineTo(tip.x - aw,   tip.y + ah);
       ctx.closePath();
       ctx.fill();
       ctx.globalAlpha = 1;
+      ctx.shadowBlur  = 0;
 
       ctx.restore();
     }
 
     let animOffset = 0;
     function frame() {
-      ctx.clearRect(0, 0, W, H);
       if (arrivedRef.current) { cancelAnimationFrame(rafId); return; }
-
-      const angleRad = getArrowAngle();
-      const aligned  = Math.abs((angleRad * 180) / Math.PI) < 20;
-      const dir      = getCurrentDir();
-
-      animOffset = (animOffset + 0.008) % 1;
-      draw3DArrow(dir, aligned, animOffset);
+      animOffset = (animOffset + 0.007) % 1;
+      draw(animOffset);
       rafId = requestAnimationFrame(frame);
     }
 
     rafId = requestAnimationFrame(frame);
-    return () => cancelAnimationFrame(rafId);
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("deviceorientation", handlePitch, true);
+    };
   }, [step, arrived]);
 
   if (path.length === 0) return <p style={{ color: "var(--cream)" }}>No route to display.</p>;
