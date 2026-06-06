@@ -150,55 +150,123 @@ export default function ARNavigator({ path, locations, onExit }) {
     const ctx = canvas.getContext("2d");
     const W   = canvas.width;
     const H   = canvas.height;
-    const cx  = W / 2;
-    const cy  = H * 0.42;
     let rafId;
+
+    function getCurrentDir() {
+      return dirMap[
+        locations.find((l) => l.id === path[stepRef.current])
+          ?.neighbors?.[path[stepRef.current + 1]]?.direction ?? ""
+      ] ?? "up";
+    }
 
     function getArrowAngle() {
       const heading = headingRef.current;
       if (heading === null) return 0;
-      const dir    = dirMap[
-        locations.find((l) => l.id === path[stepRef.current])
-          ?.neighbors?.[path[stepRef.current + 1]]?.direction ?? ""
-      ] ?? "up";
-      const target = bearingMap[dir] ?? 0;
-      let diff     = target - heading;
-      diff         = ((diff + 540) % 360) - 180;
+      const target = bearingMap[getCurrentDir()] ?? 0;
+      let diff = target - heading;
+      diff = ((diff + 540) % 360) - 180;
       return (diff * Math.PI) / 180;
     }
 
-    function drawArrow(angleRad) {
-      const size  = 72;
-      const aligned = Math.abs((angleRad * 180) / Math.PI) < 20;
-      const color = aligned ? "#00ff88" : "#00E5FF";
+    // Draw a 3D perspective path on the floor with direction curve
+    function draw3DArrow(dir, aligned, animOffset) {
+      const color     = aligned ? "#00ff88" : "#00E5FF";
+      const shadowClr = aligned ? "#00ff88" : "#007AFF";
+      const vp        = { x: W / 2, y: H * 0.38 };  // vanishing point
+      const base      = H * 0.97;                     // bottom of screen (floor)
+      const SEGMENTS  = 12;
 
+      // build perspective path points bottom → vanishing point with curve
+      function getPoint(t) {
+        const ease = t * t; // perspective compression
+        const y    = base - (base - vp.y) * t;
+        let x      = W / 2;
+
+        if (dir === "right") {
+          // curves right in top half
+          x = W / 2 + (t > 0.4 ? ((t - 0.4) / 0.6) ** 2 * W * 0.38 : 0);
+        } else if (dir === "left") {
+          x = W / 2 - (t > 0.4 ? ((t - 0.4) / 0.6) ** 2 * W * 0.38 : 0);
+        } else if (dir === "down") {
+          // goes toward viewer (bottom)
+          return { x: W / 2, y: base - (base - vp.y) * (1 - t) };
+        }
+        return { x, y };
+      }
+
+      // draw glowing road / path lane
       ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(angleRad);
-      ctx.shadowColor = color;
-      ctx.shadowBlur  = 28;
-      ctx.fillStyle   = color;
+      ctx.shadowColor = shadowClr;
+      ctx.shadowBlur  = 18;
 
-      // stem
+      // left edge of path
       ctx.beginPath();
-      ctx.roundRect(-9, 8, 18, size * 0.65, 4);
+      for (let i = 0; i <= SEGMENTS; i++) {
+        const t  = i / SEGMENTS;
+        const pt = getPoint(t);
+        const hw = 38 * (1 - t * 0.82); // width shrinks with perspective
+        if (i === 0) ctx.moveTo(pt.x - hw, pt.y);
+        else ctx.lineTo(pt.x - hw, pt.y);
+      }
+      for (let i = SEGMENTS; i >= 0; i--) {
+        const t  = i / SEGMENTS;
+        const pt = getPoint(t);
+        const hw = 38 * (1 - t * 0.82);
+        ctx.lineTo(pt.x + hw, pt.y);
+      }
+      ctx.closePath();
+      ctx.fillStyle = `${aligned ? "rgba(0,255,136,0.13)" : "rgba(0,229,255,0.10)"}`;
       ctx.fill();
 
-      // arrowhead
+      // animated dashed centre line
+      const dashLen = 18;
+      for (let i = 0; i <= SEGMENTS; i++) {
+        const t      = ((i / SEGMENTS) + animOffset) % 1;
+        const tNext  = ((( i + 0.5) / SEGMENTS) + animOffset) % 1;
+        const pt     = getPoint(t);
+        const ptNext = getPoint(Math.min(tNext, 1));
+        const alpha  = t < 0.85 ? 1 : (1 - t) / 0.15;
+        ctx.globalAlpha = alpha * 0.9;
+        ctx.strokeStyle = color;
+        ctx.lineWidth   = Math.max(1.5, 4 * (1 - t * 0.75));
+        ctx.beginPath();
+        ctx.moveTo(pt.x, pt.y);
+        ctx.lineTo(ptNext.x, ptNext.y);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+
+      // arrowhead at the vanishing end
+      const tipT  = 0.72;
+      const tip   = getPoint(tipT);
+      const tipW  = 28 * (1 - tipT * 0.75);
+      const tipH  = 22 * (1 - tipT * 0.75);
+      ctx.fillStyle   = color;
+      ctx.shadowBlur  = 22;
+      ctx.globalAlpha = 0.95;
       ctx.beginPath();
-      ctx.moveTo(0,           -size * 0.52);
-      ctx.lineTo( size * 0.52, size * 0.12);
-      ctx.lineTo(-size * 0.52, size * 0.12);
+      ctx.moveTo(tip.x,        tip.y - tipH);
+      ctx.lineTo(tip.x + tipW, tip.y + tipH * 0.4);
+      ctx.lineTo(tip.x,        tip.y + tipH * 0.1);
+      ctx.lineTo(tip.x - tipW, tip.y + tipH * 0.4);
       ctx.closePath();
       ctx.fill();
+      ctx.globalAlpha = 1;
 
       ctx.restore();
     }
 
+    let animOffset = 0;
     function frame() {
       ctx.clearRect(0, 0, W, H);
       if (arrivedRef.current) { cancelAnimationFrame(rafId); return; }
-      drawArrow(getArrowAngle());
+
+      const angleRad = getArrowAngle();
+      const aligned  = Math.abs((angleRad * 180) / Math.PI) < 20;
+      const dir      = getCurrentDir();
+
+      animOffset = (animOffset + 0.008) % 1;
+      draw3DArrow(dir, aligned, animOffset);
       rafId = requestAnimationFrame(frame);
     }
 
@@ -216,28 +284,7 @@ export default function ARNavigator({ path, locations, onExit }) {
         <CameraHandler onStream={(ref) => {}} />
         <canvas ref={canvasRef} style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none" }} />
 
-        {/* Walking distance arc — shown on camera overlay */}
-        <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
-          <circle
-            cx="50%" cy="42%"
-            r="52"
-            fill="none"
-            stroke="rgba(255,255,255,0.1)"
-            strokeWidth="5"
-          />
-          <circle
-            cx="50%" cy="42%"
-            r="52"
-            fill="none"
-            stroke="#00ff88"
-            strokeWidth="5"
-            strokeDasharray={`${2 * Math.PI * 52}`}
-            strokeDashoffset={`${2 * Math.PI * 52 * (1 - distanceProgress)}`}
-            strokeLinecap="round"
-            transform={`rotate(-90, ${canvasRef.current?.width / 2 ?? 0}, ${(canvasRef.current?.height ?? 0) * 0.42})`}
-            style={{ transition: "stroke-dashoffset 0.3s ease" }}
-          />
-        </svg>
+
       </div>
 
       {/* iOS permission prompt */}
