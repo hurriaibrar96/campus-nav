@@ -68,20 +68,23 @@ export default function ARNavigator({ path, locations, onExit }) {
   useEffect(() => { stepRef.current = step; }, [step]);
   useEffect(() => { arrivedRef.current = arrived; }, [arrived]);
 
-  // when step changes, record the current heading as the base and reset turn confirmation
+  // when step changes, reset distance and turn state
   useEffect(() => {
     const dir = dirMap[
       locations.find((l) => l.id === path[step])?.neighbors?.[path[step + 1]]?.direction ?? ""
     ] ?? "up";
-    // for straight steps no turn needed — confirm immediately
-    if (dir === "up" || dir === "down") {
-      turnConfirmed.current = true;
-    } else {
-      turnConfirmed.current = false;
-      stepBaseHeading.current = headingRef.current; // snapshot heading at turn start
-    }
     distWalkedRef.current = 0;
     setWrongDir(false);
+    if (dir === "up" || dir === "down") {
+      turnConfirmed.current = true;
+      stepBaseHeading.current = null;
+    } else {
+      turnConfirmed.current = false;
+      // delay snapshot by 300ms to ensure compass has a fresh reading
+      setTimeout(() => {
+        stepBaseHeading.current = headingRef.current;
+      }, 300);
+    }
   }, [step]);
 
   const getNode    = (id) => locations.find((l) => l.id === id);
@@ -154,7 +157,7 @@ export default function ARNavigator({ path, locations, onExit }) {
         headingRef.current = avg;
         setDeviceHeading(avg);
 
-        // check if user has turned enough for the current step
+        // check if user has turned enough — only when base is locked and not yet confirmed
         if (!turnConfirmed.current && stepBaseHeading.current !== null) {
           const base = stepBaseHeading.current;
           let diff = avg - base;
@@ -163,9 +166,9 @@ export default function ARNavigator({ path, locations, onExit }) {
             locations.find((l) => l.id === path[stepRef.current])
               ?.neighbors?.[path[stepRef.current + 1]]?.direction ?? ""
           ] ?? "up";
-          // require at least 50° turn in the correct direction
-          if (dir === "left"  && diff <= -50) { turnConfirmed.current = true; setWrongDir(false); }
-          if (dir === "right" && diff >=  50) { turnConfirmed.current = true; setWrongDir(false); }
+          // require at least 45° turn in the correct direction
+          if (dir === "left"  && diff <= -45) { turnConfirmed.current = true; setWrongDir(false); }
+          if (dir === "right" && diff >=  45) { turnConfirmed.current = true; setWrongDir(false); }
         }
       }
     };
