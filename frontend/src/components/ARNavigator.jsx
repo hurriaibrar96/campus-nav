@@ -161,14 +161,10 @@ export default function ARNavigator({ path, locations, onExit }) {
         if (!turnConfirmed.current && stepBaseHeading.current !== null) {
           const base = stepBaseHeading.current;
           let diff = avg - base;
-          diff = ((diff + 540) % 360) - 180; // -180..180
-          const dir = dirMap[
-            locations.find((l) => l.id === path[stepRef.current])
-              ?.neighbors?.[path[stepRef.current + 1]]?.direction ?? ""
-          ] ?? "up";
-          // require at least 45° turn in the correct direction
-          if (dir === "left"  && diff <= -45) { turnConfirmed.current = true; setWrongDir(false); }
-          if (dir === "right" && diff >=  45) { turnConfirmed.current = true; setWrongDir(false); }
+          diff = ((diff + 540) % 360) - 180; // -180..180, positive=right, negative=left
+          const absDiff = Math.abs(diff);
+          // if turned at least 30° in any direction, confirm the turn
+          if (absDiff >= 30) { turnConfirmed.current = true; setWrongDir(false); }
         }
       }
     };
