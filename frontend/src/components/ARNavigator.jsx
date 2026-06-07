@@ -53,6 +53,7 @@ export default function ARNavigator({ path, locations, onExit }) {
   const [distanceProgress, setDistanceProgress] = useState(0); // 0–1
 
   const [wrongDir, setWrongDir] = useState(false);
+  const [turnCountdown, setTurnCountdown] = useState(0);
 
   const canvasRef        = useRef(null);
   const headingRef       = useRef(null);
@@ -75,15 +76,17 @@ export default function ARNavigator({ path, locations, onExit }) {
     ] ?? "up";
     distWalkedRef.current = 0;
     setWrongDir(false);
+    turnConfirmed.current = false;
+    stepBaseHeading.current = null;
+    // auto-confirm after 2s — gives user time to physically turn
     if (dir === "up" || dir === "down") {
       turnConfirmed.current = true;
-      stepBaseHeading.current = null;
+      setTurnCountdown(0);
     } else {
-      turnConfirmed.current = false;
-      // delay snapshot by 300ms to ensure compass has a fresh reading
-      setTimeout(() => {
-        stepBaseHeading.current = headingRef.current;
-      }, 300);
+      setTurnCountdown(2);
+      const i1 = setTimeout(() => setTurnCountdown(1), 1000);
+      const i2 = setTimeout(() => { setTurnCountdown(0); turnConfirmed.current = true; }, 2000);
+      return () => { clearTimeout(i1); clearTimeout(i2); };
     }
   }, [step]);
 
@@ -156,16 +159,6 @@ export default function ARNavigator({ path, locations, onExit }) {
         const avg = (Math.atan2(sin, cos) * 180 / Math.PI + 360) % 360;
         headingRef.current = avg;
         setDeviceHeading(avg);
-
-        // check if user has turned enough — only when base is locked and not yet confirmed
-        if (!turnConfirmed.current && stepBaseHeading.current !== null) {
-          const base = stepBaseHeading.current;
-          let diff = avg - base;
-          diff = ((diff + 540) % 360) - 180; // -180..180, positive=right, negative=left
-          const absDiff = Math.abs(diff);
-          // if turned at least 30° in any direction, confirm the turn
-          if (absDiff >= 30) { turnConfirmed.current = true; setWrongDir(false); }
-        }
       }
     };
     window.addEventListener("deviceorientationabsolute", handle, true);
@@ -442,14 +435,14 @@ export default function ARNavigator({ path, locations, onExit }) {
             <div style={{ fontSize: 16, fontWeight: "bold", marginBottom: 4 }}>{instruction}</div>
             <div style={{ fontSize: 10, opacity: 0.5, marginBottom: 8 }}>Step {step + 1} of {path.length}</div>
 
-            {/* Wrong direction warning */}
-            {wrongDir && (
+            {/* Turn countdown */}
+            {turnCountdown > 0 && (
               <div style={{
-                background: "rgba(255,80,80,0.15)", border: "1px solid rgba(255,80,80,0.5)",
+                background: "rgba(0,229,255,0.1)", border: "1px solid rgba(0,229,255,0.4)",
                 borderRadius: 8, padding: "6px 12px", marginBottom: 8,
-                color: "#ff6b6b", fontSize: 12, fontWeight: 600, textAlign: "center",
+                color: "#00E5FF", fontSize: 12, fontWeight: 600, textAlign: "center",
               }}>
-                ⚠️ Please {mappedDir === "left" ? "turn LEFT ⬅" : "turn RIGHT ➡"} first!
+                {mappedDir === "left" ? "⬅ Turn LEFT now..." : "➡ Turn RIGHT now..."} ({turnCountdown}s)
               </div>
             )}
 
