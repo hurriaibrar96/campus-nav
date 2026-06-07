@@ -14,8 +14,6 @@ const dirMap = {
   "CROSS": "up", "CROSS LEFT": "left", "CROSS RIGHT": "right", "STRAIGHT BACK": "down",
 };
 
-const bearingMap = { up: 0, down: 180, left: -90, right: 90 };
-
 // Real distances in meters between node pairs (bidirectional)
 const EDGE_DISTANCES = {
   "entrance|carbs_dept":              0.5,
@@ -54,17 +52,37 @@ export default function ARNavigator({ path, locations, onExit }) {
   const [orientationPermission, setOrientationPermission] = useState("prompt");
   const [distanceProgress, setDistanceProgress] = useState(0); // 0–1
 
-  const canvasRef       = useRef(null);
-  const headingRef      = useRef(null);
-  const headingBuffer   = useRef([]); // for smoothing
-  const stepRef         = useRef(0);
-  const arrivedRef      = useRef(false);
-  const distWalkedRef   = useRef(0);  // meters walked on current edge
-  const lastAccelRef    = useRef(0);  // for step peak detection
-  const stepCooldownRef = useRef(false);
+  const [wrongDir, setWrongDir] = useState(false);
 
-  useEffect(() => { stepRef.current   = step;   }, [step]);
+  const canvasRef        = useRef(null);
+  const headingRef       = useRef(null);
+  const headingBuffer    = useRef([]);
+  const stepRef          = useRef(0);
+  const arrivedRef       = useRef(false);
+  const distWalkedRef    = useRef(0);
+  const lastAccelRef     = useRef(0);
+  const stepCooldownRef  = useRef(false);
+  const stepBaseHeading  = useRef(null); // compass heading when this step started
+  const turnConfirmed    = useRef(true); // true when user is facing the right way
+
+  useEffect(() => { stepRef.current = step; }, [step]);
   useEffect(() => { arrivedRef.current = arrived; }, [arrived]);
+
+  // when step changes, record the current heading as the base and reset turn confirmation
+  useEffect(() => {
+    const dir = dirMap[
+      locations.find((l) => l.id === path[step])?.neighbors?.[path[step + 1]]?.direction ?? ""
+    ] ?? "up";
+    // for straight steps no turn needed — confirm immediately
+    if (dir === "up" || dir === "down") {
+      turnConfirmed.current = true;
+    } else {
+      turnConfirmed.current = false;
+      stepBaseHeading.current = headingRef.current; // snapshot heading at turn start
+    }
+    distWalkedRef.current = 0;
+    setWrongDir(false);
+  }, [step]);
 
   const getNode    = (id) => locations.find((l) => l.id === id);
   const startLabel = getNode(path[0])?.label ?? path[0];
@@ -90,18 +108,20 @@ export default function ARNavigator({ path, locations, onExit }) {
       if (!a) return;
       const mag = Math.sqrt(a.x ** 2 + a.y ** 2 + a.z ** 2);
 
-      // detect peak (step) — magnitude crosses threshold going up then down
       if (mag > STEP_THRESHOLD && lastAccelRef.current <= STEP_THRESHOLD && !stepCooldownRef.current) {
         stepCooldownRef.current = true;
-        setTimeout(() => { stepCooldownRef.current = false; }, 350); // debounce
+        setTimeout(() => { stepCooldownRef.current = false; }, 350);
+
+        // only count steps if user has turned in the right direction
+        if (!turnConfirmed.current) {
+          setWrongDir(true);
+          lastAccelRef.current = mag;
+          return;
+        }
+        setWrongDir(false);
 
         distWalkedRef.current += STEP_LENGTH;
-
-        const currentEdgeDist = (() => {
-          const node = locations.find((l) => l.id === path[stepRef.current]);
-          return getEdgeDistance(path[stepRef.current], path[stepRef.current + 1]);
-        })();
-
+        const currentEdgeDist = getEdgeDistance(path[stepRef.current], path[stepRef.current + 1]);
         const p = Math.min(distWalkedRef.current / currentEdgeDist, 1);
         setDistanceProgress(p);
 
@@ -109,11 +129,8 @@ export default function ARNavigator({ path, locations, onExit }) {
           distWalkedRef.current = 0;
           setDistanceProgress(0);
           const next = stepRef.current + 1;
-          if (next >= path.length - 1) {
-            setArrived(true);
-          } else {
-            setStep(next);
-          }
+          if (next >= path.length - 1) setArrived(true);
+          else setStep(next);
         }
       }
       lastAccelRef.current = mag;
@@ -128,16 +145,28 @@ export default function ARNavigator({ path, locations, onExit }) {
     const handle = (e) => {
       if (e.alpha !== null) {
         const raw = e.webkitCompassHeading ?? e.alpha;
-        // smooth: keep last 5 readings, average them
         const buf = headingBuffer.current;
         buf.push(raw);
         if (buf.length > 5) buf.shift();
-        // circular mean to handle 0/360 wrap
         const sin = buf.reduce((s, h) => s + Math.sin(h * Math.PI / 180), 0);
         const cos = buf.reduce((s, h) => s + Math.cos(h * Math.PI / 180), 0);
         const avg = (Math.atan2(sin, cos) * 180 / Math.PI + 360) % 360;
         headingRef.current = avg;
         setDeviceHeading(avg);
+
+        // check if user has turned enough for the current step
+        if (!turnConfirmed.current && stepBaseHeading.current !== null) {
+          const base = stepBaseHeading.current;
+          let diff = avg - base;
+          diff = ((diff + 540) % 360) - 180; // -180..180
+          const dir = dirMap[
+            locations.find((l) => l.id === path[stepRef.current])
+              ?.neighbors?.[path[stepRef.current + 1]]?.direction ?? ""
+          ] ?? "up";
+          // require at least 50° turn in the correct direction
+          if (dir === "left"  && diff <= -50) { turnConfirmed.current = true; setWrongDir(false); }
+          if (dir === "right" && diff >=  50) { turnConfirmed.current = true; setWrongDir(false); }
+        }
       }
     };
     window.addEventListener("deviceorientationabsolute", handle, true);
@@ -197,16 +226,13 @@ export default function ARNavigator({ path, locations, onExit }) {
       ] ?? "up";
     }
 
-    // compass heading diff → how much to curve left/right (-1 to +1)
+    // curve factor driven directly by turn direction from map
     function getCurveFactor() {
-      const heading = headingRef.current;
-      if (heading === null) return 0;
-      const dir    = getCurrentDir();
-      const target = bearingMap[dir] ?? 0;
-      let diff     = target - heading;
-      diff         = ((diff + 540) % 360) - 180; // -180..180
-      // clamp to ±90 and normalise to -1..+1
-      return Math.max(-1, Math.min(1, diff / 90));
+      const dir = getCurrentDir();
+      if (dir === "left")  return -1;
+      if (dir === "right") return  1;
+      if (dir === "down")  return  0;
+      return 0; // straight / up
     }
 
     function draw(animOffset) {
@@ -416,6 +442,17 @@ export default function ARNavigator({ path, locations, onExit }) {
 
             <div style={{ fontSize: 16, fontWeight: "bold", marginBottom: 4 }}>{instruction}</div>
             <div style={{ fontSize: 10, opacity: 0.5, marginBottom: 8 }}>Step {step + 1} of {path.length}</div>
+
+            {/* Wrong direction warning */}
+            {wrongDir && (
+              <div style={{
+                background: "rgba(255,80,80,0.15)", border: "1px solid rgba(255,80,80,0.5)",
+                borderRadius: 8, padding: "6px 12px", marginBottom: 8,
+                color: "#ff6b6b", fontSize: 12, fontWeight: 600, textAlign: "center",
+              }}>
+                ⚠️ Please {mappedDir === "left" ? "turn LEFT ⬅" : "turn RIGHT ➡"} first!
+              </div>
+            )}
 
             {/* Walking progress for current edge */}
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
