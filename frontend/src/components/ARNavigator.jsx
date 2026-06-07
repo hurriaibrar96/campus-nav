@@ -16,12 +16,32 @@ const dirMap = {
 
 const bearingMap = { up: 0, down: 180, left: -90, right: 90 };
 
-// ─── TUNING ────────────────────────────────────────────────────────────────
-// All distances in campus.json are 1.
-// Set this to the real average corridor length in meters on your campus.
-// Too small = advances too early.  Too large = advances too late.
-const METERS_PER_UNIT = 10; // ← change this based on real campus testing
-// ────────────────────────────────────────────────────────────────────────────
+// Real distances in meters between node pairs (bidirectional)
+const EDGE_DISTANCES = {
+  "entrance|carbs_dept":              0.5,
+  "carbs_dept|g4":                    0.5,
+  "g4|boys_washroom":                 1.0,
+  "g4|stairs_1":                      0.5,
+  "stairs_1|computer_lab":            0.5,
+  "computer_lab|library_gate1":       0.2,
+  "library_gate1|g2":                 1.8,
+  "library_gate1|stairs_2":           2.0,
+  "library_gate1|g3":                 2.0,
+  "library_gate1|g4":                 2.1,
+  "stairs_2|meelan_exit":             1.0,
+  "stairs_2|aerolab":                 0.5,
+  "aerolab|girls_washroom":           2.5,
+  "girls_washroom|aircraft_showroom": 0.5,
+  "girls_washroom|aerolab2":          1.5,
+  "aerolab2|ahs_faculty":             0.5,
+};
+
+function getEdgeDistance(fromId, toId) {
+  return EDGE_DISTANCES[`${fromId}|${toId}`]
+    ?? EDGE_DISTANCES[`${toId}|${fromId}`]
+    ?? 1.0;
+}
+
 // accelerometer: minimum acceleration magnitude to count as a step
 const STEP_THRESHOLD = 12;
 // average step length in meters
@@ -54,7 +74,7 @@ export default function ARNavigator({ path, locations, onExit }) {
   const nextNode    = getNode(path[step + 1]);
   const jsonDir     = currentNode?.neighbors?.[path[step + 1]]?.direction ?? "";
   const mappedDir   = dirMap[jsonDir] ?? "up";
-  const edgeDist    = (currentNode?.neighbors?.[path[step + 1]]?.distance ?? 1) * METERS_PER_UNIT;
+  const edgeDist    = getEdgeDistance(path[step], path[step + 1]);
 
   const instruction = step === path.length - 1
     ? `📍 You have arrived at ${endLabel}`
@@ -79,7 +99,7 @@ export default function ARNavigator({ path, locations, onExit }) {
 
         const currentEdgeDist = (() => {
           const node = locations.find((l) => l.id === path[stepRef.current]);
-          return (node?.neighbors?.[path[stepRef.current + 1]]?.distance ?? 1) * METERS_PER_UNIT;
+          return getEdgeDistance(path[stepRef.current], path[stepRef.current + 1]);
         })();
 
         const p = Math.min(distWalkedRef.current / currentEdgeDist, 1);
