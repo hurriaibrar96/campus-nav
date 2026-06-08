@@ -18,7 +18,7 @@ const dirMap = {
 const STEP_THRESHOLD = 12;
 // average step length in meters
 const STEP_LENGTH = 0.75;
-const METERS_PER_UNIT = 2;
+const METERS_PER_UNIT = 8;
 
 export default function ARNavigator({ path, locations, onExit }) {
   const [step, setStep]           = useState(0);
@@ -181,9 +181,8 @@ export default function ARNavigator({ path, locations, onExit }) {
       const vpY       = H * (1 - (pitch / 90) * 0.72);  // range: H*0.28 .. H*1.0
       const baseY     = H * 0.99;
       const SEGMENTS  = 16;
-      const aligned   = Math.abs(curveFactor) < 0.22;
-      const color     = aligned ? "#00ff88" : "#00E5FF";
-      const fillColor = aligned ? "rgba(0,255,136,0.12)" : "rgba(0,229,255,0.09)";
+      const color     = "#00ff88";
+      const fillColor = "rgba(0,255,136,0.12)";
 
       // each point along the path — perspective + compass curve
       function getPoint(t) {
