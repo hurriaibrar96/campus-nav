@@ -27,9 +27,6 @@ export default function ARNavigator({ path, locations, onExit }) {
   const [orientationPermission, setOrientationPermission] = useState("prompt");
   const [distanceProgress, setDistanceProgress] = useState(0); // 0–1
 
-  const [wrongDir, setWrongDir] = useState(false);
-  const [turnCountdown, setTurnCountdown] = useState(0);
-
   const canvasRef        = useRef(null);
   const headingRef       = useRef(null);
   const headingBuffer    = useRef([]);
@@ -38,32 +35,9 @@ export default function ARNavigator({ path, locations, onExit }) {
   const distWalkedRef    = useRef(0);
   const lastAccelRef     = useRef(0);
   const stepCooldownRef  = useRef(false);
-  const stepBaseHeading  = useRef(null); // compass heading when this step started
-  const turnConfirmed    = useRef(true); // true when user is facing the right way
 
   useEffect(() => { stepRef.current = step; }, [step]);
   useEffect(() => { arrivedRef.current = arrived; }, [arrived]);
-
-  // when step changes, reset distance and turn state
-  useEffect(() => {
-    const dir = dirMap[
-      locations.find((l) => l.id === path[step])?.neighbors?.[path[step + 1]]?.direction ?? ""
-    ] ?? "up";
-    distWalkedRef.current = 0;
-    setWrongDir(false);
-    turnConfirmed.current = false;
-    stepBaseHeading.current = null;
-    // auto-confirm after 2s — gives user time to physically turn
-    if (dir === "up" || dir === "down") {
-      turnConfirmed.current = true;
-      setTurnCountdown(0);
-    } else {
-      setTurnCountdown(2);
-      const i1 = setTimeout(() => setTurnCountdown(1), 1000);
-      const i2 = setTimeout(() => { setTurnCountdown(0); turnConfirmed.current = true; }, 2000);
-      return () => { clearTimeout(i1); clearTimeout(i2); };
-    }
-  }, [step]);
 
   const getNode    = (id) => locations.find((l) => l.id === id);
   const startLabel = getNode(path[0])?.label ?? path[0];
@@ -92,14 +66,6 @@ export default function ARNavigator({ path, locations, onExit }) {
       if (mag > STEP_THRESHOLD && lastAccelRef.current <= STEP_THRESHOLD && !stepCooldownRef.current) {
         stepCooldownRef.current = true;
         setTimeout(() => { stepCooldownRef.current = false; }, 350);
-
-        // only count steps if user has turned in the right direction
-        if (!turnConfirmed.current) {
-          setWrongDir(true);
-          lastAccelRef.current = mag;
-          return;
-        }
-        setWrongDir(false);
 
         distWalkedRef.current += STEP_LENGTH;
         const currentEdgeDist = (locations.find((l) => l.id === path[stepRef.current])?.neighbors?.[path[stepRef.current + 1]]?.distance ?? 1) * METERS_PER_UNIT;
@@ -409,17 +375,6 @@ export default function ARNavigator({ path, locations, onExit }) {
 
             <div style={{ fontSize: 16, fontWeight: "bold", marginBottom: 4 }}>{instruction}</div>
             <div style={{ fontSize: 10, opacity: 0.5, marginBottom: 8 }}>Step {step + 1} of {path.length}</div>
-
-            {/* Turn countdown */}
-            {turnCountdown > 0 && (
-              <div style={{
-                background: "rgba(0,229,255,0.1)", border: "1px solid rgba(0,229,255,0.4)",
-                borderRadius: 8, padding: "6px 12px", marginBottom: 8,
-                color: "#00E5FF", fontSize: 12, fontWeight: 600, textAlign: "center",
-              }}>
-                {mappedDir === "left" ? "⬅ Turn LEFT now..." : "➡ Turn RIGHT now..."} ({turnCountdown}s)
-              </div>
-            )}
 
             {/* Walking progress for current edge */}
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
