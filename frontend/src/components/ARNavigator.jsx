@@ -14,11 +14,18 @@ const dirMap = {
   "CROSS": "up", "CROSS LEFT": "left", "CROSS RIGHT": "right", "STRAIGHT BACK": "down",
 };
 
+const bearingMap = { up: 0, down: 180, left: -90, right: 90 };
+
+// ─── TUNING ────────────────────────────────────────────────────────────────
+// All distances in campus.json are 1.
+// Set this to the real average corridor length in meters on your campus.
+// Too small = advances too early.  Too large = advances too late.
+const METERS_PER_UNIT = 10; // ← change this based on real campus testing
+// ────────────────────────────────────────────────────────────────────────────
 // accelerometer: minimum acceleration magnitude to count as a step
 const STEP_THRESHOLD = 12;
 // average step length in meters
 const STEP_LENGTH = 0.75;
-const METERS_PER_UNIT = 8;
 
 export default function ARNavigator({ path, locations, onExit }) {
   const [step, setStep]           = useState(0);
@@ -27,16 +34,15 @@ export default function ARNavigator({ path, locations, onExit }) {
   const [orientationPermission, setOrientationPermission] = useState("prompt");
   const [distanceProgress, setDistanceProgress] = useState(0); // 0–1
 
-  const canvasRef        = useRef(null);
-  const headingRef       = useRef(null);
-  const headingBuffer    = useRef([]);
-  const stepRef          = useRef(0);
-  const arrivedRef       = useRef(false);
-  const distWalkedRef    = useRef(0);
-  const lastAccelRef     = useRef(0);
-  const stepCooldownRef  = useRef(false);
+  const canvasRef       = useRef(null);
+  const headingRef      = useRef(null);
+  const stepRef         = useRef(0);
+  const arrivedRef      = useRef(false);
+  const distWalkedRef   = useRef(0);  // meters walked on current edge
+  const lastAccelRef    = useRef(0);  // for step peak detection
+  const stepCooldownRef = useRef(false);
 
-  useEffect(() => { stepRef.current = step; }, [step]);
+  useEffect(() => { stepRef.current   = step;   }, [step]);
   useEffect(() => { arrivedRef.current = arrived; }, [arrived]);
 
   const getNode    = (id) => locations.find((l) => l.id === id);
@@ -47,7 +53,7 @@ export default function ARNavigator({ path, locations, onExit }) {
   const nextNode    = getNode(path[step + 1]);
   const jsonDir     = currentNode?.neighbors?.[path[step + 1]]?.direction ?? "";
   const mappedDir   = dirMap[jsonDir] ?? "up";
-  const edgeDist = (currentNode?.neighbors?.[path[step + 1]]?.distance ?? 1) * METERS_PER_UNIT;
+  const edgeDist    = (currentNode?.neighbors?.[path[step + 1]]?.distance ?? 1) * METERS_PER_UNIT;
 
   const instruction = step === path.length - 1
     ? `📍 You have arrived at ${endLabel}`
@@ -63,12 +69,18 @@ export default function ARNavigator({ path, locations, onExit }) {
       if (!a) return;
       const mag = Math.sqrt(a.x ** 2 + a.y ** 2 + a.z ** 2);
 
+      // detect peak (step) — magnitude crosses threshold going up then down
       if (mag > STEP_THRESHOLD && lastAccelRef.current <= STEP_THRESHOLD && !stepCooldownRef.current) {
         stepCooldownRef.current = true;
-        setTimeout(() => { stepCooldownRef.current = false; }, 350);
+        setTimeout(() => { stepCooldownRef.current = false; }, 350); // debounce
 
         distWalkedRef.current += STEP_LENGTH;
-        const currentEdgeDist = (locations.find((l) => l.id === path[stepRef.current])?.neighbors?.[path[stepRef.current + 1]]?.distance ?? 1) * METERS_PER_UNIT;
+
+        const currentEdgeDist = (() => {
+          const node = locations.find((l) => l.id === path[stepRef.current]);
+          return (node?.neighbors?.[path[stepRef.current + 1]]?.distance ?? 1) * METERS_PER_UNIT;
+        })();
+
         const p = Math.min(distWalkedRef.current / currentEdgeDist, 1);
         setDistanceProgress(p);
 
@@ -76,8 +88,11 @@ export default function ARNavigator({ path, locations, onExit }) {
           distWalkedRef.current = 0;
           setDistanceProgress(0);
           const next = stepRef.current + 1;
-          if (next >= path.length - 1) setArrived(true);
-          else setStep(next);
+          if (next >= path.length - 1) {
+            setArrived(true);
+          } else {
+            setStep(next);
+          }
         }
       }
       lastAccelRef.current = mag;
@@ -91,15 +106,9 @@ export default function ARNavigator({ path, locations, onExit }) {
   const startOrientationTracking = () => {
     const handle = (e) => {
       if (e.alpha !== null) {
-        const raw = e.webkitCompassHeading ?? e.alpha;
-        const buf = headingBuffer.current;
-        buf.push(raw);
-        if (buf.length > 5) buf.shift();
-        const sin = buf.reduce((s, h) => s + Math.sin(h * Math.PI / 180), 0);
-        const cos = buf.reduce((s, h) => s + Math.cos(h * Math.PI / 180), 0);
-        const avg = (Math.atan2(sin, cos) * 180 / Math.PI + 360) % 360;
-        headingRef.current = avg;
-        setDeviceHeading(avg);
+        const h = e.webkitCompassHeading ?? e.alpha;
+        headingRef.current = h;
+        setDeviceHeading(h);
       }
     };
     window.addEventListener("deviceorientationabsolute", handle, true);
@@ -159,13 +168,16 @@ export default function ARNavigator({ path, locations, onExit }) {
       ] ?? "up";
     }
 
-    // curve factor driven directly by turn direction from map
+    // compass heading diff → how much to curve left/right (-1 to +1)
     function getCurveFactor() {
-      const dir = getCurrentDir();
-      if (dir === "left")  return -1;
-      if (dir === "right") return  1;
-      if (dir === "down")  return  0;
-      return 0; // straight / up
+      const heading = headingRef.current;
+      if (heading === null) return 0;
+      const dir    = getCurrentDir();
+      const target = bearingMap[dir] ?? 0;
+      let diff     = target - heading;
+      diff         = ((diff + 540) % 360) - 180; // -180..180
+      // clamp to ±90 and normalise to -1..+1
+      return Math.max(-1, Math.min(1, diff / 90));
     }
 
     function draw(animOffset) {
@@ -181,8 +193,9 @@ export default function ARNavigator({ path, locations, onExit }) {
       const vpY       = H * (1 - (pitch / 90) * 0.72);  // range: H*0.28 .. H*1.0
       const baseY     = H * 0.99;
       const SEGMENTS  = 16;
-      const color     = "#00ff88";
-      const fillColor = "rgba(0,255,136,0.12)";
+      const aligned   = Math.abs(curveFactor) < 0.22;
+      const color     = aligned ? "#00ff88" : "#00E5FF";
+      const fillColor = aligned ? "rgba(0,255,136,0.12)" : "rgba(0,229,255,0.09)";
 
       // each point along the path — perspective + compass curve
       function getPoint(t) {
