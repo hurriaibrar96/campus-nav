@@ -23,7 +23,7 @@ const bearingMap = { up: 0, down: 180, left: -90, right: 90 };
 const METERS_PER_UNIT = 10; // ← change this based on real campus testing
 // ────────────────────────────────────────────────────────────────────────────
 // accelerometer: minimum acceleration magnitude to count as a step
-const STEP_THRESHOLD = 12;
+const STEP_THRESHOLD = 8;
 // average step length in meters
 const STEP_LENGTH = 0.75;
 
@@ -116,6 +116,9 @@ export default function ARNavigator({ path, locations, onExit }) {
   };
 
   const requestOrientationPermission = async () => {
+    if (typeof DeviceMotionEvent?.requestPermission === "function") {
+      try { await DeviceMotionEvent.requestPermission(); } catch {}
+    }
     if (typeof DeviceOrientationEvent?.requestPermission === "function") {
       try {
         const res = await DeviceOrientationEvent.requestPermission();
@@ -130,6 +133,9 @@ export default function ARNavigator({ path, locations, onExit }) {
 
   useEffect(() => {
     if (typeof DeviceOrientationEvent?.requestPermission !== "function") {
+      if (typeof DeviceMotionEvent?.requestPermission !== "function") {
+        // Android — no permission needed, just start
+      }
       setOrientationPermission("granted");
       startOrientationTracking();
     }
