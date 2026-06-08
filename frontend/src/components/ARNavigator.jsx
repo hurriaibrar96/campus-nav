@@ -18,7 +18,7 @@ const dirMap = {
 const STEP_THRESHOLD = 12;
 // average step length in meters
 const STEP_LENGTH = 0.75;
-const METERS_PER_UNIT = 0.5;
+const METERS_PER_UNIT = 2;
 
 export default function ARNavigator({ path, locations, onExit }) {
   const [step, setStep]           = useState(0);
