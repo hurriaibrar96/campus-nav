@@ -4,14 +4,15 @@ import CameraHandler from "./CameraHandler";
 const LABEL = { up: "⬆ Go Forward", down: "⬇ Go Back", left: "⬅ Turn Left", right: "➡ Turn Right" };
 
 const dirMap = {
-  "STRAIGHT": "up", "FRONT": "up", "BACK": "up", "BEHIND": "up",
+  "STRAIGHT": "up", "FRONT": "up",
   "LEFT": "left", "RIGHT": "right",
   "ACUTE RIGHT": "right", "OBTUSE RIGHT": "right", "FAR RIGHT": "right",
   "VERY RIGHT": "right", "RIGHT FRONT": "right", "RIGHT STRAIGHT": "right",
   "SLIGHT RIGHT": "right", "ACUTE LEFT": "left", "OBTUSE LEFT": "left",
   "FAR LEFT": "left", "VERY LEFT": "left", "LEFT STRAIGHT": "left",
   "LEFT FRONT": "left", "FAR RIGHT STRAIGHT": "right",
-  "CROSS": "up", "CROSS LEFT": "left", "CROSS RIGHT": "right", "STRAIGHT BACK": "down",
+  "CROSS": "up", "CROSS LEFT": "left", "CROSS RIGHT": "right",
+  "BACK": "down", "BEHIND": "down", "STRAIGHT BACK": "down",
 };
 
 const bearingMap = { up: 0, down: 180, left: -90, right: 90 };
@@ -20,7 +21,7 @@ const bearingMap = { up: 0, down: 180, left: -90, right: 90 };
 // All distances in campus.json are 1.
 // Set this to the real average corridor length in meters on your campus.
 // Too small = advances too early.  Too large = advances too late.
-const METERS_PER_UNIT = 7; // real campus corridor length in meters
+const METERS_PER_UNIT = 4; // real campus corridor length in meters
 // ────────────────────────────────────────────────────────────────────────────
 // accelerometer: minimum acceleration magnitude to count as a step
 const STEP_THRESHOLD = 8;
@@ -91,6 +92,7 @@ export default function ARNavigator({ path, locations, onExit }) {
           if (next >= path.length - 1) {
             setArrived(true);
           } else {
+            stepRef.current = next;
             setStep(next);
           }
         }
