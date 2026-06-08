@@ -20,7 +20,7 @@ const bearingMap = { up: 0, down: 180, left: -90, right: 90 };
 // All distances in campus.json are 1.
 // Set this to the real average corridor length in meters on your campus.
 // Too small = advances too early.  Too large = advances too late.
-const METERS_PER_UNIT = 10; // ← change this based on real campus testing
+const METERS_PER_UNIT = 7; // real campus corridor length in meters
 // ────────────────────────────────────────────────────────────────────────────
 // accelerometer: minimum acceleration magnitude to count as a step
 const STEP_THRESHOLD = 8;
@@ -174,16 +174,12 @@ export default function ARNavigator({ path, locations, onExit }) {
       ] ?? "up";
     }
 
-    // compass heading diff → how much to curve left/right (-1 to +1)
+    // curve factor driven directly by map direction
     function getCurveFactor() {
-      const heading = headingRef.current;
-      if (heading === null) return 0;
-      const dir    = getCurrentDir();
-      const target = bearingMap[dir] ?? 0;
-      let diff     = target - heading;
-      diff         = ((diff + 540) % 360) - 180; // -180..180
-      // clamp to ±90 and normalise to -1..+1
-      return Math.max(-1, Math.min(1, diff / 90));
+      const dir = getCurrentDir();
+      if (dir === "left")  return -1;
+      if (dir === "right") return  1;
+      return 0;
     }
 
     function draw(animOffset) {
@@ -199,9 +195,8 @@ export default function ARNavigator({ path, locations, onExit }) {
       const vpY       = H * (1 - (pitch / 90) * 0.72);  // range: H*0.28 .. H*1.0
       const baseY     = H * 0.99;
       const SEGMENTS  = 16;
-      const aligned   = Math.abs(curveFactor) < 0.22;
-      const color     = aligned ? "#00ff88" : "#00E5FF";
-      const fillColor = aligned ? "rgba(0,255,136,0.12)" : "rgba(0,229,255,0.09)";
+      const color     = "#00ff88";
+      const fillColor = "rgba(0,255,136,0.12)";
 
       // each point along the path — perspective + compass curve
       function getPoint(t) {
